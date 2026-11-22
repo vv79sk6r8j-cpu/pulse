@@ -67,3 +67,5 @@ jobs:
 # Refresh preview after original PE source attribution update.
 
 # Refresh preview after Markdown article migration.
+
+# Publish Markdown table rendering update to preview.
