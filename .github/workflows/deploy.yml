@@ -3,7 +3,7 @@ on:
   push:
     branches: [main, feature/interface-v0.2]
   workflow_dispatch:
-# Re-trigger combined stable and preview deployment.
+# Publish stable main and current preview branch together; refresh after feedback fix.
 permissions:
   contents: read
   pages: write
