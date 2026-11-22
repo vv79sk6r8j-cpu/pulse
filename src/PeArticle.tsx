@@ -22,6 +22,7 @@ export default function PeArticle(){
    if(b.level===2)return <h2 id={anchors[b.text]} key={i}>{b.text}</h2>;
    if(b.level===3)return <h3 key={i}>{b.text}</h3>;
    if(b.level===4)return <h4 key={i}>{b.text}</h4>;
+   if(b.text.startsWith("| ")){const rows=b.text.split("\n").map(line=>line.split("|").slice(1,-1).map(cell=>cell.trim()));return <div key={i} className="article-table-wrap"><table className="article-table"><thead><tr>{rows[0].map((cell,j)=><th key={j}>{cell}</th>)}</tr></thead><tbody>{rows.slice(2).map((row,j)=><tr key={j}>{row.map((cell,k)=><td key={k}>{cell}</td>)}</tr>)}</tbody></table></div>;}
    return <p key={i}>{inline(b.text)}</p>;
   })}</div>
   <section id="pe-source" className="article-source"><h2>Источник</h2>{blocks.slice(blocks.findIndex(b=>b.level===2&&b.text==="Источник")+1).map((b,i)=><p key={i}>{inline(b.text)}</p>)}</section>
