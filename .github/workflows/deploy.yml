@@ -1,7 +1,7 @@
 name: Deploy PULSE to GitHub Pages
 on:
   push:
-    branches: [main, feature/interface-v0.2]
+    branches: [main]
   workflow_dispatch:
 # Publish stable main and current preview branch together; refresh after theory article addition.
 permissions:
@@ -10,7 +10,7 @@ permissions:
   id-token: write
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -53,6 +53,7 @@ jobs:
         with:
           path: stable/dist
   deploy:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
