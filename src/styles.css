@@ -43,3 +43,8 @@
 .article-source h2{font-size:19px}
 .article-source p{font-size:13px;color:#a8c4cd}
 @media(max-width:760px){.article-intro,.article-section{padding:19px 16px}.article-toc{padding:13px}.article-table{font-size:12px;min-width:380px}.article-table th,.article-table td{padding:9px}}
+
+/* PULSE v0.3 horizontal sidebar wordmark */
+.sidebar-wordmark{display:block;width:100%;max-width:220px;height:auto;flex:1;min-width:0;overflow:visible}
+.brand{gap:6px;padding-left:6px;padding-right:4px}
+@media(max-width:760px){.sidebar-wordmark{max-width:222px}.brand{padding-right:0}}
