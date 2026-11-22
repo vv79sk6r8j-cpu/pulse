@@ -14,7 +14,7 @@ function inline(text:string):ReactNode{
 export default function PeArticle(){
  let source=false;
  return <article className="medical-article">
-  <div className="article-intro"><span className="overline">ТЕОРИЯ · ПОСОБИЕ</span><h1>{blocks[0]?.text}</h1><p className="article-kind">Тип материала: пособие · без плашки КР или МР</p></div>
+  <div className="article-intro"><span className="overline">ТЕОРИЯ · ПОСОБИЕ</span><h1>{blocks[0]?.text}</h1><p className="article-kind">Тип материала: Пособие</p></div>
   <nav className="article-toc" aria-label="Содержание статьи"><strong>Содержание</strong><a href="#pe-diagnosis">Диагностика</a><a href="#pe-risk">Оценка риска</a><a href="#pe-treatment">Лечение</a><a href="#pe-source">Источник</a></nav>
   <div className="article-section article-verbatim">{blocks.slice(1).map((b,i)=>{
    if(b.level===2&&b.text==="Источник")source=true;
