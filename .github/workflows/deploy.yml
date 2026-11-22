@@ -31,6 +31,8 @@ jobs:
         working-directory: stable
         run: |
           npm install
+          npm install --no-save sharp
+          node scripts/generate-icons.mjs
           npm run build
       - name: Build preview website
         working-directory: preview-source
@@ -38,6 +40,8 @@ jobs:
           VITE_BASE: /pulse/preview/
         run: |
           npm install
+          npm install --no-save sharp
+          PULSE_PREVIEW=1 node ../stable/scripts/generate-icons.mjs
           npm run build
       - name: Combine stable and preview
         run: |
