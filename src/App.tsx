@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Activity, BookOpen, Calculator, ClipboardList, FileText, Search, House, ArrowUpRight, Menu, X, ChevronRight, ShieldCheck, Copy, Check, ArrowLeft } from "lucide-react";
+import { Activity, BookOpen, Calculator, ClipboardList, FileText, Search, House, ArrowUpRight, Menu, X, ChevronRight, ShieldCheck, Copy, Check, ArrowLeft, MessageSquareWarning, Send, ExternalLink } from "lucide-react";
 
 type Section = "Главная" | "Теория" | "Шкалы и расчёты" | "POCUS" | "Документы" | "Справочники";
-type Page = Section | "GCS";
+type Page = Section | "GCS" | "Feedback";
 const sections = [
  {title:"Теория" as Section,description:"Конспекты, клинические алгоритмы и рекомендации",icon:BookOpen},
  {title:"Шкалы и расчёты" as Section,description:"Оценка состояния и клинические калькуляторы",icon:Calculator},
@@ -26,12 +26,17 @@ export default function App(){
  const [scores,setScores]=useState<[number,number,number]>([4,5,6]);
  const [copied,setCopied]=useState(false);
  const [copyError,setCopyError]=useState(false);
- const section:Section=page==="GCS"?"Шкалы и расчёты":page;
+ const [feedbackTitle,setFeedbackTitle]=useState("");
+ const [feedbackDescription,setFeedbackDescription]=useState("");
+ const [feedbackContact,setFeedbackContact]=useState("");
+ const [feedbackState,setFeedbackState]=useState<"idle"|"sending"|"success"|"error">("idle");
+ const section:Section=page==="GCS"?"Шкалы и расчёты":page==="Feedback"?"Главная":page;
  const total=scores.reduce((a,b)=>a+b,0);
  const filtered=sections.filter(s=>(s.title+" "+s.description).toLocaleLowerCase("ru").includes(query.toLocaleLowerCase("ru")));
  const scales=[{title:"Шкала комы Глазго (GCS)",description:"Оценка реакции открывания глаз, речевого и двигательного ответа",status:"Доступно"}];
  const filteredScales=scales.filter(s=>(s.title+" "+s.description).toLocaleLowerCase("ru").includes(query.toLocaleLowerCase("ru")));
  const go=(next:Page)=>{setPage(next);setMenuOpen(false);setQuery("");setCopied(false);setCopyError(false);window.scrollTo({top:0,behavior:"smooth"});};
+ const submitFeedback=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();if(!feedbackTitle.trim()||!feedbackDescription.trim())return;const endpoint=import.meta.env.VITE_FEEDBACK_ENDPOINT;if(!endpoint){setFeedbackState("error");return;}setFeedbackState("sending");try{const response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:feedbackTitle.trim(),description:feedbackDescription.trim(),contact:feedbackContact.trim(),page:window.location.href})});if(!response.ok)throw Error("Feedback unavailable");setFeedbackState("success");setFeedbackTitle("");setFeedbackDescription("");setFeedbackContact("");}catch{setFeedbackState("error");}};
  const copyResult=async()=>{const text="По шкале комы Глазго (GCS): E"+scores[0]+"V"+scores[1]+"M"+scores[2]+", "+total+" баллов — "+shortInterpretation(total)+".";try{await navigator.clipboard.writeText(text);setCopied(true);setCopyError(false);}catch{setCopyError(true);setCopied(false);}};
  return <div className="app">
   {menuOpen&&<button className="scrim" aria-label="Закрыть меню" onClick={()=>setMenuOpen(false)}/>}
@@ -39,7 +44,7 @@ export default function App(){
    <div className="brand"><Mark size={40}/><div><strong>PULSE</strong><span>ANAESTHESIA & INTENSIVE CARE</span></div><button className="close-menu" aria-label="Закрыть меню" onClick={()=>setMenuOpen(false)}><X size={20}/></button></div>
    <div className="nav-label">РАЗДЕЛЫ</div>
    <nav aria-label="Основная навигация">{navigation.map(item=><button key={item.title} className={"nav-link "+(section===item.title?"selected":"")} onClick={()=>go(item.title)}><item.icon size={19}/><span>{item.title}</span>{section===item.title&&<span className="nav-dot"/>}</button>)}</nav>
-   <div className="sidebar-bottom"><ShieldCheck size={18}/><span>Для медицинских специалистов</span></div>
+   <div className="sidebar-bottom"><button className="nav-link" onClick={()=>go("Feedback")}><MessageSquareWarning size={18}/> Сообщить об ошибке</button><a href="https://t.me/a_alenchyk" target="_blank" rel="noopener noreferrer" className="sidebar-contact"><Send size={17}/> Контакты · Telegram <ExternalLink size={14}/></a><div className="sidebar-note"><ShieldCheck size={16}/> Для медицинских специалистов</div></div>
   </aside>
   <div className="workspace">
    <div className="topbar"><button className="menu-toggle" aria-label="Открыть меню" onClick={()=>setMenuOpen(true)}><Menu size={22}/></button><button className="top-mark" aria-label="На главную" onClick={()=>go("Главная")}><Mark size={30}/></button><div className="breadcrumbs"><button onClick={()=>go("Главная")}>Главная</button>{page!=="Главная"&&<><ChevronRight size={14}/><button onClick={()=>go(section)}>{section}</button></>}{page==="GCS"&&<><ChevronRight size={14}/><span>GCS</span></>}</div><span className="version">v0.2 · preview</span></div>
@@ -51,7 +56,8 @@ export default function App(){
      <div className="cards">{filtered.map(s=>{const ready=s.title==="Шкалы и расчёты";return <button key={s.title} className={"sectioncard "+(ready?"sectioncard-ready":"sectioncard-soon")} onClick={()=>go(s.title)}><div className="card-top"><span className="card-icon"><s.icon size={23}/></span><ArrowUpRight size={19}/></div><strong>{s.title}</strong><p>{s.description}</p><span className={"card-status "+(ready?"card-status-ready":"card-status-soon")}><span className="status-indicator"/>{ready?"Доступно · 1 инструмент":"Скоро"}</span></button>})}</div>
      {filtered.length===0&&<div className="empty">По запросу ничего не найдено.</div>}
     </>}
-    {page!=="Главная"&&<><div className="page-heading"><span className="overline">{page==="GCS"?"КЛИНИЧЕСКИЙ ИНСТРУМЕНТ":"РАЗДЕЛ PULSE"}</span><h1>{page==="GCS"?"Шкала комы Глазго":page}</h1><p className="muted">{page==="GCS"?"Glasgow Coma Scale · оценка уровня сознания":page==="Шкалы и расчёты"?"Клинические шкалы и калькуляторы":"Материалы раздела будут появляться по мере проверки и публикации."}</p></div>
+    {page==="Feedback"&&<><div className="page-heading"><span className="overline">ОБРАТНАЯ СВЯЗЬ</span><h1>Сообщить об ошибке</h1><p className="muted">Опишите неточность в расчёте, тексте или работе сайта. Не отправляйте персональные данные пациентов.</p></div><form className="feedback-form" onSubmit={submitFeedback}><label>Краткий заголовок<input required maxLength={120} value={feedbackTitle} onChange={e=>{setFeedbackTitle(e.target.value);setFeedbackState("idle")}} placeholder="Например: Ошибка в шкале GCS"/></label><label>Описание<textarea required rows={6} maxLength={4000} value={feedbackDescription} onChange={e=>{setFeedbackDescription(e.target.value);setFeedbackState("idle")}} placeholder="Что произошло и как воспроизвести ошибку?"/></label><label>Контакты (необязательно)<input maxLength={200} value={feedbackContact} onChange={e=>{setFeedbackContact(e.target.value);setFeedbackState("idle")}} placeholder="Telegram или email"/></label><p className="disclaimer">Заголовок и описание могут быть опубликованы в открытом репозитории PULSE. Контакты передаются только для уведомления владельца через Telegram и не сохраняются в GitHub. Не указывайте персональные или медицинские данные третьих лиц.</p><button className="copy-button" disabled={feedbackState==="sending"} type="submit"><Send size={18}/>{feedbackState==="sending"?"Отправка…":"Отправить"}</button>{feedbackState==="success"&&<p role="status" className="feedback-success">Сообщение отправлено. Спасибо!</p>}{feedbackState==="error"&&<p role="alert" className="copy-error">Не удалось отправить сообщение. Форма пока не подключена к серверу или сервис временно недоступен. Попробуйте связаться через Telegram.</p>}</form></>}
+    {page!=="Главная"&&page!=="Feedback"&&<><div className="page-heading"><span className="overline">{page==="GCS"?"КЛИНИЧЕСКИЙ ИНСТРУМЕНТ":"РАЗДЕЛ PULSE"}</span><h1>{page==="GCS"?"Шкала комы Глазго":page}</h1><p className="muted">{page==="GCS"?"Glasgow Coma Scale · оценка уровня сознания":page==="Шкалы и расчёты"?"Клинические шкалы и калькуляторы":"Материалы раздела будут появляться по мере проверки и публикации."}</p></div>
      {page==="Шкалы и расчёты"&&<>
       <label className="search"><Search size={19}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Поиск по шкалам..." aria-label="Поиск по шкалам"/>{query&&<button aria-label="Очистить поиск" onClick={()=>setQuery("")}><X size={17}/></button>}</label>
       <div className="tool-list">{filteredScales.map(s=><button className="tool-row" key={s.title} onClick={()=>go("GCS")}><span className="card-icon"><Calculator size={22}/></span><span className="tool-copy"><strong>{s.title}</strong><small>{s.description}</small></span><span className="available">{s.status}</span><ChevronRight size={20}/></button>)}</div>
@@ -70,7 +76,7 @@ export default function App(){
      </>}
      {page!=="Шкалы и расчёты"&&page!=="GCS"&&<div className="coming"><div className="card-icon"><BookOpen size={20}/></div><div><strong>Материалы готовятся</strong><p>В этом разделе появятся проверенные материалы с источниками и датой актуализации.</p></div></div>}
     </>}
-    <footer>© PULSE · Справочный инструмент для медицинских специалистов. Не заменяет клиническое решение.</footer>
+    <footer><div>© PULSE · Справочный инструмент для медицинских специалистов. Не заменяет клиническое решение.</div><div className="footer-links"><button onClick={()=>go("Feedback")}>Сообщить об ошибке</button><a href="https://t.me/a_alenchyk" target="_blank" rel="noopener noreferrer">Контакты · Telegram</a></div></footer>
    </main>
   </div>
   <nav className="mobile-nav" aria-label="Быстрая навигация">{[navigation[0],navigation[2],navigation[3],navigation[4]].map(item=><button key={item.title} className={section===item.title?"selected":""} onClick={()=>go(item.title)}><item.icon size={21}/><span>{item.title==="Шкалы и расчёты"?"Шкалы":item.title}</span></button>)}<button className={menuOpen?"selected":""} onClick={()=>setMenuOpen(true)}><Menu size={21}/><span>Ещё</span></button></nav>
