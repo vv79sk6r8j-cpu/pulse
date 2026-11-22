@@ -18,7 +18,7 @@ const gcs=[
 ] as const;
 function Mark({size=36}:{size?:number}){return <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect width="64" height="64" rx="18" fill="#17485A"/><path d="M5 33h10c3 0 3-6 7-6s4 6 8 6h3l3 5 5-24 6 37 5-18h7" stroke="#71DED1" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
 function interpretation(total:number){if(total===15)return "15 баллов — максимальная оценка по GCS; при отсутствии других нарушений соответствует ясному сознанию.";if(total>=13)return "13–14 баллов — лёгкое снижение оценки по GCS.";if(total>=9)return "9–12 баллов — умеренное нарушение сознания по диапазону GCS.";return "3–8 баллов — тяжёлое нарушение сознания по GCS (диапазон, обычно соответствующий коме).";}
-function shortInterpretation(total:number){if(total===15)return "максимальная оценка по GCS (при отсутствии иных нарушений — ясное сознание)";if(total>=13)return "лёгкое снижение оценки по GCS";if(total>=9)return "умеренное нарушение сознания по GCS";return "тяжёлое нарушение сознания по GCS (диапазон 3–8 баллов, кома)";}
+function shortInterpretation(total:number){if(total===15)return "ясное сознание";if(total>=13)return "лёгкое снижение оценки по GCS";if(total>=9)return "умеренное нарушение сознания по GCS";return "тяжёлое нарушение сознания по GCS (диапазон 3–8 баллов, кома)";}
 export default function App(){
  const [page,setPage]=useState<Page>("Главная");
  const [query,setQuery]=useState("");
