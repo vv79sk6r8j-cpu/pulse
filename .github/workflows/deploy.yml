@@ -73,3 +73,5 @@ jobs:
 # Publish PULSE v0.3 horizontal sidebar wordmark.
 
 # Publish restored Geneva and clinical bullet lists in PULSE preview.
+
+# Retrigger production deployment after cancelled workflow (PULSE v0.3).
