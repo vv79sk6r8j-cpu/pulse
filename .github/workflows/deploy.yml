@@ -104,3 +104,5 @@ jobs:
 # Rebuild preview: ASA VI E guard and source-backed Documents section.
 
 # Rebuild preview after fixing document page Section type error TS2322.
+
+# Refresh preview with accessible high-contrast PDF download button.
