@@ -34,7 +34,7 @@ export default function App(){
  const [feedbackDescription,setFeedbackDescription]=useState("");
  const [feedbackContact,setFeedbackContact]=useState("");
  const [feedbackState,setFeedbackState]=useState<"idle"|"sending"|"success"|"error">("idle");
- const section:Section=(page==="GCS"||page==="RASS"||page==="qSOFA"||page==="ASA"||page==="FOUR"||page==="SOFA"||page==="IBW"||page==="Renal"||page==="Infusion")?"Шкалы и расчёты":page==="PE"?"Теория":page==="Feedback"?"Главная":page;
+ const section:Section=(page==="GCS"||page==="RASS"||page==="qSOFA"||page==="ASA"||page==="FOUR"||page==="SOFA"||page==="IBW"||page==="Renal"||page==="Infusion")?"Шкалы и расчёты":page==="PE"?"Теория":page==="Feedback"?"Главная":(page==="preoperative-questionnaire"||page==="patient-memos")?"Документы":page;
  const filtered=sections.filter(s=>(s.title+" "+s.description).toLocaleLowerCase("ru").includes(query.toLocaleLowerCase("ru")));
  const articles=[{title:"Тромбоэмболия лёгочной артерии (ТЭЛА)",description:"Диагностика, оценка риска, антикоагуляция и реперфузионная терапия",keywords:"ТЭЛА тромбоэмболия легочной артерии PE PESI Wells Geneva"}];
  const filteredArticles=articles.filter(a=>(a.title+" "+a.description+" "+a.keywords).toLocaleLowerCase("ru").includes(query.toLocaleLowerCase("ru")));
