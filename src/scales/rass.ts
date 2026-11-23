@@ -1,3 +1,15 @@
+export const rassMeta = {
+  category: "КЛИНИЧЕСКАЯ ШКАЛА",
+  title: "RASS — шкала возбуждения и седации",
+  subtitle: "Richmond Agitation–Sedation Scale",
+  shortTitle: "RASS",
+  cardTitle: "Выберите наблюдаемый уровень",
+  instruction: "Сначала оцените поведение пациента, затем реакцию на голос и, при отсутствии ответа, на физическую стимуляцию.",
+  catalogDescription: "Уровень возбуждения и седации от −5 до +4",
+  caution: "RASS отражает наблюдаемый уровень возбуждения или седации и не устанавливает причину нарушения сознания.",
+  sourceLabel: "SCCM, Richmond Agitation–Sedation Scale; Sessler et al., 2002"
+} as const;
+
 /** RASS criteria. Edit clinical wording here; keep scores unchanged unless validated. */
 export const rass = [
   {score:4,name:"Агрессивен",detail:"Выраженная агрессия, непосредственная опасность для персонала."},
