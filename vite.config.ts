@@ -1,10 +1,9 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
-// GitHub Pages serves the test build from /pulse/preview/.
-// Without this base, index.html loads JS/CSS from /pulse/assets/ (production),
-// which can leave the test page blank.
-export default defineConfig({
+// Respect VITE_BASE supplied by the GitHub Actions preview build.
+// loadEnv avoids a direct process.env reference (Node typings are not installed).
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: process.env.VITE_BASE || "/pulse/",
-});
+  base: loadEnv(mode, ".", "VITE_").VITE_BASE || "/pulse/",
+}));
