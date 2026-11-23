@@ -9,7 +9,7 @@ export const gcsMeta = {
  cardTitle: "Оценка по трём компонентам",
  catalogDescription: "Оценка реакции открывания глаз, речевого и двигательного ответа",
  instruction: "Оцените открывание глаз, речевую и двигательную реакции.",
- caution: "Интерпретация по сумме GCS ориентировочная и не является самостоятельным диагнозом или точной классификацией глубины комы. При интубации, седации и других препятствиях оценке документируйте неоцениваемые компоненты отдельно; не подставляйте за них минимальные баллы.",
+ disclaimer: "Интерпретация по сумме GCS ориентировочная и не является самостоятельным диагнозом или точной классификацией глубины комы. При интубации, седации и других препятствиях оценке документируйте неоцениваемые компоненты отдельно; не подставляйте за них минимальные баллы.",
  sourceLabel: "Teasdale G, Jennett B. Assessment of coma and impaired consciousness. Lancet. 1974.",
  sourceUrl: "https://pubmed.ncbi.nlm.nih.gov/4136544/"
 } as const;
@@ -36,7 +36,7 @@ export default function GcsTool({onBack}:{onBack:()=>void}){
        <div className="interpretation"><span className="overline">ИНТЕРПРЕТАЦИЯ</span><p>{interpretation(total)}</p></div>
        <button className="copy-button" onClick={copyResult}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button>
        {copyError&&<p role="alert" className="copy-error">Не удалось скопировать текст. Проверьте разрешение доступа к буферу обмена.</p>}
-       <p className="disclaimer">{gcsMeta.caution}</p>
+       <p className="disclaimer">{gcsMeta.disclaimer}</p>
        <p className="disclaimer">Источник: <a href={gcsMeta.sourceUrl} target="_blank" rel="noopener noreferrer">{gcsMeta.sourceLabel}</a></p>
       </section>
      </>;
