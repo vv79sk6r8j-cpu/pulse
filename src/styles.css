@@ -57,3 +57,8 @@
 
 /* Source-backed documents: preserve author wording, line breaks and table cell separators. */
 .document-source-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font-size:15px;color:#dce9ee;background:rgba(6,28,38,.35);border:1px solid rgba(130,191,201,.25);border-radius:16px;padding:20px;margin:20px 0 24px}.document-source-text+button{margin-top:4px}
+
+/* High-contrast PDF download link: explicit anchor color overrides global link styles. */
+.calculator a.copy-button{background:#176b72;color:#ffffff;text-decoration:none}
+.calculator a.copy-button:hover,.calculator a.copy-button:focus-visible{background:#125b62;color:#ffffff}
+.calculator a.copy-button svg{color:inherit}
