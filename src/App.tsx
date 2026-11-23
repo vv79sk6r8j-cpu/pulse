@@ -1,4 +1,5 @@
-import EarlyScaleTool from "./EarlyScaleTool";
+import EarlyScaleTool from "./scales/ScaleTool";
+import GcsTool from "./scales/gcs";
 import PeArticle from "./PeArticle";
 import { useState } from "react";
 import { Activity, BookOpen, Calculator, ClipboardList, FileText, Search, House, ArrowUpRight, Menu, X, ChevronRight, ShieldCheck, Copy, Check, ArrowLeft, MessageSquareWarning, Send, ExternalLink } from "lucide-react";
@@ -13,35 +14,26 @@ const sections = [
  {title:"Справочники" as Section,description:"Краткие справочные материалы",icon:ClipboardList}
 ];
 const navigation=[{title:"Главная" as Section,icon:House},...sections.map(s=>({title:s.title,icon:s.icon}))];
-const gcs=[
- {name:"Открывание глаз (E)",values:[["Спонтанное",4],["На обращение",3],["На боль",2],["Отсутствует",1]]},
- {name:"Речевая реакция (V)",values:[["Ориентирован",5],["Спутанная речь",4],["Отдельные слова",3],["Нечленораздельные звуки",2],["Отсутствует",1]]},
- {name:"Двигательная реакция (M)",values:[["Выполняет команды",6],["Локализует боль",5],["Отдёргивает на боль",4],["Патологическое сгибание",3],["Разгибание",2],["Отсутствует",1]]}
-] as const;
+
 function Mark({size=36}:{size?:number}){return <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect width="64" height="64" rx="18" fill="#17485A"/><path d="M5 33h10c3 0 3-6 7-6s4 6 8 6h3l3 5 5-24 6 37 5-18h7" stroke="#71DED1" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-function shortInterpretation(total:number){if(total===15)return "ясное сознание";if(total>=13)return "умеренное оглушение";if(total>=10)return "глубокое оглушение";if(total>=8)return "сопор";if(total>=6)return "умеренная кома";if(total>=4)return "глубокая кома";return "запредельная кома";}
-function interpretation(total:number){return shortInterpretation(total);}
+
 export default function App(){
  const [page,setPage]=useState<Page>("Главная");
  const [query,setQuery]=useState("");
  const [menuOpen,setMenuOpen]=useState(false);
- const [scores,setScores]=useState<[number,number,number]>([4,5,6]);
- const [copied,setCopied]=useState(false);
- const [copyError,setCopyError]=useState(false);
  const [feedbackTitle,setFeedbackTitle]=useState("");
  const [feedbackDescription,setFeedbackDescription]=useState("");
  const [feedbackContact,setFeedbackContact]=useState("");
  const [feedbackState,setFeedbackState]=useState<"idle"|"sending"|"success"|"error">("idle");
  const section:Section=(page==="GCS"||page==="RASS"||page==="qSOFA")?"Шкалы и расчёты":page==="PE"?"Теория":page==="Feedback"?"Главная":page;
- const total=scores.reduce((a,b)=>a+b,0);
  const filtered=sections.filter(s=>(s.title+" "+s.description).toLocaleLowerCase("ru").includes(query.toLocaleLowerCase("ru")));
  const articles=[{title:"Тромбоэмболия лёгочной артерии (ТЭЛА)",description:"Диагностика, оценка риска, антикоагуляция и реперфузионная терапия",keywords:"ТЭЛА тромбоэмболия легочной артерии PE PESI Wells Geneva"}];
  const filteredArticles=articles.filter(a=>(a.title+" "+a.description+" "+a.keywords).toLocaleLowerCase("ru").includes(query.toLocaleLowerCase("ru")));
  const scales=[{title:"Шкала комы Глазго (GCS)",description:"Оценка реакции открывания глаз, речевого и двигательного ответа",status:"Доступно",page:"GCS" as Page},{title:"RASS",description:"Уровень возбуждения и седации от −5 до +4",status:"Доступно",page:"RASS" as Page},{title:"qSOFA",description:"ЧДД, систолическое АД, изменение сознания",status:"Доступно",page:"qSOFA" as Page}];
  const filteredScales=scales.filter(s=>(s.title+" "+s.description).toLocaleLowerCase("ru").includes(query.toLocaleLowerCase("ru")));
- const go=(next:Page)=>{setPage(next);setMenuOpen(false);setQuery("");setCopied(false);setCopyError(false);window.scrollTo({top:0,behavior:"smooth"});};
+ const go=(next:Page)=>{setPage(next);setMenuOpen(false);setQuery("");window.scrollTo({top:0,behavior:"smooth"});};
  const submitFeedback=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();if(!feedbackTitle.trim()||!feedbackDescription.trim())return;const endpoint="https://pulse-feedback.s78cj9knjj.workers.dev";if(!endpoint){setFeedbackState("error");return;}setFeedbackState("sending");try{const response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:feedbackTitle.trim(),description:feedbackDescription.trim(),contact:feedbackContact.trim(),page:window.location.href})});if(!response.ok)throw Error("Feedback unavailable");setFeedbackState("success");setFeedbackTitle("");setFeedbackDescription("");setFeedbackContact("");}catch{setFeedbackState("error");}};
- const copyResult=async()=>{const text="По шкале комы Глазго (GCS): E"+scores[0]+"V"+scores[1]+"M"+scores[2]+", "+total+" баллов — "+shortInterpretation(total)+".";try{await navigator.clipboard.writeText(text);setCopied(true);setCopyError(false);}catch{setCopyError(true);setCopied(false);}};
+
  return <div className="app">
   {menuOpen&&<button className="scrim" aria-label="Закрыть меню" onClick={()=>setMenuOpen(false)}/>}
   <aside className={"sidebar "+(menuOpen?"open":"")}>
@@ -69,17 +61,7 @@ export default function App(){
       {filteredScales.length===0&&<div className="empty">Шкалы по запросу не найдены.</div>}
      </>}
      {(page==="RASS"||page==="qSOFA")&&<EarlyScaleTool key={page} kind={page} onBack={()=>go("Шкалы и расчёты")}/>}
-     {page==="GCS"&&<>
-      <button className="back" onClick={()=>go("Шкалы и расчёты")}><ArrowLeft size={17}/> Все шкалы</button>
-      <section className="calculator"><div className="calchead"><div><span className="overline">GLASGOW COMA SCALE</span><h2>Оценка по трём компонентам</h2></div><div className="score">{total}<small>/15</small></div></div>
-       <div className="gcsgrid">{gcs.map((category,i)=><label key={category.name}><span>{category.name}</span><select value={scores[i]} onChange={e=>{setScores(prev=>prev.map((v,j)=>i===j?Number(e.target.value):v) as [number,number,number]);setCopied(false);setCopyError(false);}}>{category.values.map(([name,value])=><option key={value} value={value}>{value} — {name}</option>)}</select></label>)}</div>
-       <div className="result"><span>Результат</span><strong>E{scores[0]} · V{scores[1]} · M{scores[2]} = {total} баллов</strong></div>
-       <div className="interpretation"><span className="overline">ИНТЕРПРЕТАЦИЯ</span><p>{interpretation(total)}</p></div>
-       <button className="copy-button" onClick={copyResult}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button>
-       {copyError&&<p role="alert" className="copy-error">Не удалось скопировать текст. Проверьте разрешение доступа к буферу обмена.</p>}
-       <p className="disclaimer">Интерпретация по сумме GCS ориентировочная и не является самостоятельным диагнозом или точной классификацией глубины комы. При интубации, седации и других препятствиях оценке документируйте неоцениваемые компоненты отдельно; не подставляйте за них минимальные баллы.</p>
-      </section>
-     </>}
+     {page==="GCS"&&<GcsTool onBack={()=>go("Шкалы и расчёты")}/>}
      {page!=="Шкалы и расчёты"&&page!=="GCS"&&page!=="RASS"&&page!=="qSOFA"&&page!=="Теория"&&<div className="coming"><div className="card-icon"><BookOpen size={20}/></div><div><strong>Материалы готовятся</strong><p>В этом разделе появятся проверенные материалы с источниками и датой актуализации.</p></div></div>}
     </>}
     {page==="PE"&&<><button className="back" onClick={()=>go("Теория")}><ArrowLeft size={17}/> Все статьи</button><PeArticle/></>}
