@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
+export const gcsMeta = {
+ category: "КЛИНИЧЕСКАЯ ШКАЛА",
+ title: "Шкала комы Глазго",
+ subtitle: "Glasgow Coma Scale · оценка уровня сознания",
+ shortTitle: "GCS",
+ cardTitle: "Оценка по трём компонентам",
+ catalogDescription: "Оценка реакции открывания глаз, речевого и двигательного ответа"
+} as const;
+
 const gcs=[
  {name:"Открывание глаз (E)",values:[["Спонтанное",4],["На обращение",3],["На боль",2],["Отсутствует",1]]},
  {name:"Речевая реакция (V)",values:[["Ориентирован",5],["Спутанная речь",4],["Отдельные слова",3],["Нечленораздельные звуки",2],["Отсутствует",1]]},
@@ -15,8 +24,9 @@ export default function GcsTool({onBack}:{onBack:()=>void}){
  const total=scores.reduce((a,b)=>a+b,0);
  const copyResult=async()=>{const text="По шкале комы Глазго (GCS): E"+scores[0]+"V"+scores[1]+"M"+scores[2]+", "+total+" баллов — "+shortInterpretation(total)+".";try{await navigator.clipboard.writeText(text);setCopied(true);setCopyError(false);}catch{setCopyError(true);setCopied(false);}};
  return      <>
+      <div className="page-heading"><span className="overline">{gcsMeta.category}</span><h1>{gcsMeta.title}</h1><p className="muted">{gcsMeta.subtitle}</p></div>
       <button className="back" onClick={onBack}><ArrowLeft size={17}/> Все шкалы</button>
-      <section className="calculator"><div className="calchead"><div><span className="overline">GLASGOW COMA SCALE</span><h2>Оценка по трём компонентам</h2></div><div className="score">{total}<small>/15</small></div></div>
+      <section className="calculator"><div className="calchead"><div><span className="overline">GLASGOW COMA SCALE</span><h2>{gcsMeta.cardTitle}</h2></div><div className="score">{total}<small>/15</small></div></div>
        <div className="gcsgrid">{gcs.map((category,i)=><label key={category.name}><span>{category.name}</span><select value={scores[i]} onChange={e=>{setScores(prev=>prev.map((v,j)=>i===j?Number(e.target.value):v) as [number,number,number]);setCopied(false);setCopyError(false);}}>{category.values.map(([name,value])=><option key={value} value={value}>{value} — {name}</option>)}</select></label>)}</div>
        <div className="result"><span>Результат</span><strong>E{scores[0]} · V{scores[1]} · M{scores[2]} = {total} баллов</strong></div>
        <div className="interpretation"><span className="overline">ИНТЕРПРЕТАЦИЯ</span><p>{interpretation(total)}</p></div>
