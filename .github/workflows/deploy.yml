@@ -76,3 +76,5 @@ jobs:
 # Publish restored Geneva and clinical bullet lists in PULSE preview.
 
 # Retrigger production deployment after cancelled workflow (PULSE v0.3).
+
+# Rebuild PULSE 0.4 preview after correcting Vite asset base path.
