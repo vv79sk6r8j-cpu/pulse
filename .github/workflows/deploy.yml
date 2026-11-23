@@ -88,3 +88,5 @@ jobs:
 # Test-build PULSE 0.4 remaining scales and calculators.
 
 # Rebuild preview: ASA VI E guard and source-backed Documents section.
+
+# Rebuild preview after fixing document page Section type error TS2322.
