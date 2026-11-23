@@ -1,0 +1,33 @@
+import { useState } from "react";
+import { ArrowLeft, Check, Copy } from "lucide-react";
+
+export const ibwMeta={
+ category:"КЛИНИЧЕСКИЙ КАЛЬКУЛЯТОР",
+ title:"Идеальная масса тела (IBW)",
+ subtitle:"Devine formula · Ideal Body Weight",
+ shortTitle:"IBW",
+ cardTitle:"Рост и пол",
+ instruction:"Введите рост в сантиметрах и выберите пол, используемый в формуле Devine.",
+ catalogDescription:"Идеальная масса тела по формуле Devine (1974)",
+ disclaimer:"IBW по Devine не равна прогнозируемой массе тела (PBW) для расчёта дыхательного объёма при ИВЛ. Формула Devine исходно предложена для взрослых; при росте ниже 152,4 см её применение ограничено. Результат не заменяет клиническую оценку.",
+ sourceLabel:"Devine BJ. Gentamicin therapy. Drug Intell Clin Pharm. 1974;8:650–655.",
+ sourceUrl:"https://pubmed.ncbi.nlm.nih.gov/?term=Devine+1974+gentamicin+therapy+ideal+body+weight"
+} as const;
+
+export function devineIBW(heightCm:number,sex:"male"|"female"):number{
+ return (sex==="male"?50:45.5)+2.3*((heightCm-152.4)/2.54);
+}
+export default function IbwTool({onBack}:{onBack:()=>void}){
+ const [height,setHeight]=useState(""),[sex,setSex]=useState<"male"|"female"| "">(""),[copied,setCopied]=useState(false),[error,setError]=useState(false);
+ const h=Number(height),valid=height.trim()!==""&&Number.isFinite(h)&&h>=152.4&&h<=230&&sex!=="";
+ const result=valid?devineIBW(h,sex as "male"|"female"):null;
+ const note=result===null?"":`Идеальная масса тела (Devine): ${result.toFixed(1)} кг; рост ${h} см; пол по формуле: ${sex==="male"?"мужской":"женский"}.`;
+ const copy=async()=>{try{await navigator.clipboard.writeText(note);setCopied(true);setError(false);}catch{setError(true);}};
+ return <><button className="back" onClick={onBack}><ArrowLeft size={17}/> Все инструменты</button><div className="page-heading"><span className="overline">{ibwMeta.category}</span><h1>{ibwMeta.title}</h1><p className="muted">{ibwMeta.subtitle}</p></div>
+ <section className="calculator"><div className="calchead"><div><span className="overline">{ibwMeta.shortTitle}</span><h2>{ibwMeta.cardTitle}</h2></div><div className="score">{result===null?"—":result.toFixed(1)}<small>кг</small></div></div>
+ <p className="disclaimer">{ibwMeta.instruction}</p><div className="gcsgrid"><label><span>Рост, см</span><input type="number" min="152.4" max="230" step="0.1" inputMode="decimal" value={height} onChange={e=>{setHeight(e.target.value);setCopied(false);}} placeholder="Например, 175"/></label><label><span>Пол в формуле</span><select value={sex} onChange={e=>{setSex(e.target.value as typeof sex);setCopied(false);}}><option value="">Выберите</option><option value="male">Мужской</option><option value="female">Женский</option></select></label></div>
+ {height!==""&&(!Number.isFinite(h)||h<152.4||h>230)&&<p role="alert" className="copy-error">Для этой реализации допустим рост 152,4–230 см.</p>}
+ {note&&<><div className="result"><span>Результат</span><strong>{note}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
+ {error&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
+ <p className="disclaimer">{ibwMeta.disclaimer}</p><p className="disclaimer">Источник: <a href={ibwMeta.sourceUrl} target="_blank" rel="noopener noreferrer">{ibwMeta.sourceLabel}</a>.</p></section></>;
+}
