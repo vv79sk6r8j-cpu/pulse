@@ -84,3 +84,5 @@ jobs:
 # Rebuild test stand after PULSE 0.4 domain-module refactor.
 
 # Rebuild PULSE 0.4 preview with per-scale metadata and no duplicate headings.
+
+# Test-build PULSE 0.4 remaining scales and calculators.
