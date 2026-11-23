@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-# Publish stable main and current preview branch together; refresh after theory article addition.
+# Publish stable main and PULSE 0.4 test branch together.
 permissions:
   contents: read
   pages: write
@@ -23,7 +23,7 @@ jobs:
       - name: Checkout preview version
         uses: actions/checkout@v4
         with:
-          ref: feature/interface-v0.2
+          ref: feature/v0.4-scales-calculators
           path: preview-source
       - uses: actions/setup-node@v4
         with:
