@@ -80,3 +80,5 @@ jobs:
 # Rebuild PULSE 0.4 preview after correcting Vite asset base path.
 
 # Retry PULSE 0.4 preview after TypeScript-safe Vite environment fix.
+
+# Rebuild test stand after PULSE 0.4 domain-module refactor.
