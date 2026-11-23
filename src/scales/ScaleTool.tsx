@@ -37,7 +37,7 @@ export default function EarlyScaleTool({kind,onBack}:{kind:EarlyScale,onBack:()=
       </>}
       {result&&<><div className="result"><span>Результат</span><strong>{result}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
       {copyError&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
-      <p className="disclaimer">{meta.caution}</p>
+      <p className="disclaimer">{meta.disclaimer}</p>
       <p className="disclaimer">Источник: {isRass?<a href={rassSource} target="_blank" rel="noopener noreferrer">{rassMeta.sourceLabel}</a>:<a href={qsofaSource} target="_blank" rel="noopener noreferrer">{qsofaMeta.sourceLabel}</a>}.</p>
     </section></>;
 }
