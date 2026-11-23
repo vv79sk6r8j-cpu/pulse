@@ -54,3 +54,6 @@
 
 /* PULSE 0.4: ASA and FOUR controls */
 .tool-check{display:flex;align-items:flex-start;gap:12px;margin:20px 0;color:#d7e9ed;line-height:1.5}.tool-check input{width:19px;height:19px;flex-shrink:0;accent-color:#71ded1;margin-top:3px}.scale-domain{margin:24px 0}.scale-domain h3{font-size:17px;margin:0 0 12px;color:#d9f3f3}.calculator .result{overflow-wrap:anywhere}
+
+/* Source-backed documents: preserve author wording, line breaks and table cell separators. */
+.document-source-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font-size:15px;color:#dce9ee;background:rgba(6,28,38,.35);border:1px solid rgba(130,191,201,.25);border-radius:16px;padding:20px;margin:20px 0 24px}.document-source-text+button{margin-top:4px}
