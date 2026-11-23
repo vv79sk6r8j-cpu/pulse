@@ -8,7 +8,7 @@ export const asaMeta={
  shortTitle:"ASA PS",
  cardTitle:"Выберите класс физического состояния",
  instruction:"Оцените состояние пациента до анестезии. Суффикс E обозначает экстренное вмешательство, при котором задержка лечения существенно увеличивает угрозу жизни или части тела.",
- catalogDescription:"Классы ASA I–VI и признак экстренности E",
+ catalogDescription:"Классы ASA I–VI; E применяется только к ASA I–V",
  disclaimer:"ASA PS описывает физическое состояние пациента до анестезии, но сама по себе не является расчётом индивидуального периоперационного риска. Класс определяется клинически; приведённые формулировки не заменяют официальные примеры ASA.",
  sourceLabel:"ASA — Statement on ASA Physical Status Classification System",
  sourceUrl:"https://www.asahq.org/standards-and-practice-parameters/statement-on-asa-physical-status-classification-system"
@@ -31,8 +31,8 @@ export default function AsaTool({onBack}:{onBack:()=>void}){
  <div className="page-heading"><span className="overline">{asaMeta.category}</span><h1>{asaMeta.title}</h1><p className="muted">{asaMeta.subtitle}</p></div>
  <section className="calculator"><div className="calchead"><div><span className="overline">{asaMeta.shortTitle}</span><h2>{asaMeta.cardTitle}</h2></div><div className="score">{value??"—"}{emergency&&value?"E":""}</div></div>
  <p className="disclaimer">{asaMeta.instruction}</p>
- <div className="scale-options">{classes.map(item=><button key={item.value} className={"scale-option "+(value===item.value?"active":"")} aria-pressed={value===item.value} onClick={()=>{setValue(item.value);setCopied(false);}}><strong>{item.value}</strong><span><b>{item.title}</b><small>{item.detail}</small></span></button>)}</div>
- <label className="tool-check"><input type="checkbox" checked={emergency} onChange={e=>{setEmergency(e.target.checked);setCopied(false);}}/> <span><b>Экстренность (E)</b> — задержка лечения существенно увеличивает угрозу жизни или части тела</span></label>
+ <div className="scale-options">{classes.map(item=><button key={item.value} className={"scale-option "+(value===item.value?"active":"")} aria-pressed={value===item.value} onClick={()=>{setValue(item.value);if(item.value==="VI")setEmergency(false);setCopied(false);}}><strong>{item.value}</strong><span><b>{item.title}</b><small>{item.detail}</small></span></button>)}</div>
+ <label className="tool-check"><input type="checkbox" checked={emergency} disabled={value==="VI"} onChange={e=>{setEmergency(value==="VI"?false:e.target.checked);setCopied(false);}}/> <span><b>Экстренность (E)</b> — задержка лечения существенно увеличивает угрозу жизни или части тела. Для ASA VI суффикс E не применяется.</span></label>
  {result&&<><div className="result"><span>Результат</span><strong>{result}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
  {error&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
  <p className="disclaimer">{asaMeta.disclaimer}</p><p className="disclaimer">Источник: <a href={asaMeta.sourceUrl} target="_blank" rel="noopener noreferrer">{asaMeta.sourceLabel}</a>.</p>
