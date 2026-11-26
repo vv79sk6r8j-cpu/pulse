@@ -17,3 +17,15 @@ const aki=(c=NaN,b48=NaN,b7=NaN,rate=NaN,h=NaN,rrt=false)=>stageAKI(c,b48,b7,rat
 test("KDIGO creatinine rise and ratios",()=>{assert.equal(aki(126.4,100),0);assert.equal(aki(126.5,100),1);assert.equal(aki(150,NaN,100),1);assert.equal(aki(200,100),2);assert.equal(aki(300,NaN,100),3);assert.equal(aki(354,330,330),0);assert.equal(aki(354,300),3);});
 test("KDIGO urine rate and duration boundaries",()=>{for(const [rate,h,expected] of [[0.49,5.9,0],[0.5,12,0],[0.49,6,1],[0.49,12,2],[0.3,24,2],[0.29,24,3],[0,11.9,1],[0,12,3]])assert.equal(aki(NaN,NaN,NaN,rate,h),expected);});
 test("KDIGO highest criterion and acute RRT",()=>{assert.equal(aki(200,100,100,0.2,24),3);assert.equal(aki(NaN,NaN,NaN,NaN,NaN,true),3);});
+
+test("SOFA cardiovascular categories and MAP boundary",()=>{
+ for(const [pressor,map,expected] of [["none","69",1],["none","70",0],["dobutamine","70",2],["dopamine_low","70",2],["dopamine_mid","70",3],["ne_low","70",3],["dopamine_high","70",4],["ne_high","70",4]])assert.equal(calculateSofa({...normal,pressor,map})[3],expected);
+});
+test("SOFA rejects unknown support categories",()=>{for(const patch of [{pressor:"unknown"},{respSupport:"unknown"}])assert.equal(calculateSofa({...normal,...patch}),null);});
+test("SOFA alternate lab scoring boundaries",()=>{
+ for(const [field,index,cases] of [["bilirubin",2,[[1.19,0],[1.2,1],[2,2],[6,3],[12,4]]],["creatinine",5,[[1.19,0],[1.2,1],[2,2],[3.5,3],[5,4]]]])for(const [v,expected] of cases)assert.equal(calculateSofa({...normal,[field]:String(v)},{[field]:"alt"})[index],expected);
+});
+test("KDIGO ratio and urine threshold edges",()=>{
+ assert.equal(aki(149.9,NaN,100),0);assert.equal(aki(199.9,NaN,100),1);assert.equal(aki(299.9,NaN,100),2);
+ assert.equal(aki(NaN,NaN,NaN,0.29,23.9),2);assert.equal(aki(NaN,NaN,NaN,0.5,24),0);
+});
