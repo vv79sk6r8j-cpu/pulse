@@ -10,16 +10,16 @@ export const gcsMeta = {
  shortTitle: "GCS",
  cardTitle: "Оценка по трём компонентам",
  catalogDescription: "Оценка реакции открывания глаз, речевого и двигательного ответа",
- instruction: "Сначала исключите препятствия оценке, затем наблюдайте спонтанные реакции. При необходимости примените звуковую, затем физическую стимуляцию. Фиксируйте лучший ответ каждого компонента; при невозможности оценки выберите NT.",
+ instruction: "Сначала исключите препятствия оценке, затем наблюдайте спонтанные реакции. При необходимости примените звуковую, затем физическую стимуляцию (дозированное давление по методике GCS). При M4 наблюдается быстрое нормальное сгибание, при M3 — патологическое сгибание. Фиксируйте лучший ответ каждого компонента; при невозможности оценки выберите NT.",
  disclaimer: "Интерпретация по сумме GCS ориентировочная и не является самостоятельным диагнозом или точной классификацией глубины комы. При интубации, седации и других препятствиях оценке документируйте неоцениваемые компоненты отдельно; не подставляйте за них минимальные баллы.",
  sourceLabel: "Teasdale G, Jennett B. Lancet. 1974; Glasgow Coma Scale — structured assessment aid.",
  sourceUrl: "https://www.glasgowcomascale.org/gcs-aid/"
 } as const;
 
 const gcs=[
- {name:"Открывание глаз (E)",values:[["Спонтанное",4],["На звук (голос)",3],["На давление",2],["Отсутствует",1]]},
+ {name:"Открывание глаз (E)",values:[["Спонтанное",4],["На обращение",3],["На болевой стимул",2],["Отсутствует",1]]},
  {name:"Речевая реакция (V)",values:[["Ориентирован",5],["Спутанная речь",4],["Отдельные слова",3],["Нечленораздельные звуки",2],["Отсутствует",1]]},
- {name:"Двигательная реакция (M)",values:[["Выполняет команды",6],["Локализует стимул",5],["Нормальное сгибание (быстрое, вариабельное)",4],["Патологическое сгибание",3],["Разгибание",2],["Отсутствует",1]]}
+ {name:"Двигательная реакция (M)",values:[["Выполняет команды",6],["Локализует боль",5],["Отдёргивает конечность на боль",4],["Патологическое сгибание",3],["Патологическое разгибание",2],["Отсутствует",1]]}
 ] as const;
 function shortInterpretation(total:number){return total===15?"Максимальная оценка GCS": "Снижение оценки GCS; интерпретировать с учётом компонентов и клинического контекста.";}
 function interpretation(total:number){return shortInterpretation(total);}
@@ -36,7 +36,7 @@ export default function GcsTool({onBack}:{onBack:()=>void}){
       <div className="page-heading"><span className="overline">{gcsMeta.category}</span><h1>{gcsMeta.title}</h1><p className="muted">{gcsMeta.subtitle}</p></div>
       <button className="back" onClick={onBack}><ArrowLeft size={17}/> Все шкалы</button>
       <section className="calculator"><div className="calchead"><div><span className="overline">GLASGOW COMA SCALE</span><h2>{gcsMeta.cardTitle}</h2></div><div className="score">{total??"—"}<small>/15</small></div></div>
-       <div className="gcsgrid">{gcs.map((category,i)=><label key={category.name}><span>{category.name}</span><select aria-invalid={attempted&&gcsMeta.validation.components.required&&!scores[i]} style={attempted&&gcsMeta.validation.components.required&&!scores[i]?{borderColor:"#dc2626"}:undefined} value={scores[i]} onChange={e=>{setScores(prev=>prev.map((v,j)=>i===j?e.target.value:v));setCopied(false);setCopyError(false);}}><option value="">Выберите</option>{gcsMeta.validation.components.allowNotTestable&&<option value="NT">Не оценивается (NT)</option>}{category.values.map(([name,value])=><option key={value} value={value}>{value} — {name}</option>)}</select><FieldFeedback issue={attempted&&gcsMeta.validation.components.required&&!scores[i]?{kind:"error",message:"Выберите ответ или NT."}:undefined}/></label>)}</div>
+       <p className="disclaimer">{gcsMeta.instruction}</p><div className="gcsgrid">{gcs.map((category,i)=><label key={category.name}><span>{category.name}</span><select aria-invalid={attempted&&gcsMeta.validation.components.required&&!scores[i]} style={attempted&&gcsMeta.validation.components.required&&!scores[i]?{borderColor:"#dc2626"}:undefined} value={scores[i]} onChange={e=>{setScores(prev=>prev.map((v,j)=>i===j?e.target.value:v));setCopied(false);setCopyError(false);}}><option value="">Выберите</option>{gcsMeta.validation.components.allowNotTestable&&<option value="NT">Не оценивается (NT)</option>}{category.values.map(([name,value])=><option key={value} value={value}>{value} — {name}</option>)}</select><FieldFeedback issue={attempted&&gcsMeta.validation.components.required&&!scores[i]?{kind:"error",message:"Выберите ответ или NT."}:undefined}/></label>)}</div>
        <div className="result"><span>Результат</span><strong>{result}</strong></div>
        <div className="interpretation"><span className="overline">ИНТЕРПРЕТАЦИЯ</span><p>{total===null?"Сумма недоступна при неполной оценке.":interpretation(total)}</p></div>
        <button className="copy-button" disabled={!scores.every(Boolean)} onClick={copyResult}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button>
