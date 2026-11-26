@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
 export const ibwMeta={
- validation:{height:{required:true,min:152.4}},
+ anthropometryValidationSource:"Soh et al., doi:10.1136/jech-2025-225333; provisional research anthropometry bounds, not ICU-specific; pending source and clinical review",validation:{height:{required:true,min:152.4,warnMax:228.6}},
  category:"КЛИНИЧЕСКИЙ КАЛЬКУЛЯТОР",
  title:"Идеальная масса тела (IBW)",
  subtitle:"Devine formula · Ideal Body Weight",
