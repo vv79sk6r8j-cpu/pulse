@@ -25,7 +25,7 @@ const inputs=[
  {id:"creatinine",label:"Креатинин, мкмоль/л",type:"number"},
  {id:"urine",label:"Диурез за 24 часа, мл",type:"number"}
 ] as const;
-const numeric=(v:string)=>v.trim()===""?null:Number(v);
+const numeric=(v:string)=>v.trim()===""?null:Number(v.replace(",","."));
 export function calculateSofa(v:Values):number[]|null{
  const pf=numeric(v.pf??""),pl=numeric(v.platelets??""),bil=numeric(v.bilirubin??""),map=numeric(v.map??""),gcs=numeric(v.gcs??""),cr=numeric(v.creatinine??""),ur=numeric(v.urine??"");
  if([pf,pl,bil,map,gcs,cr,ur].some(x=>x===null||!Number.isFinite(x)||x<0)||!v.respSupport||!v.pressor||pf!<=0||gcs!<3||gcs!>15||!Number.isInteger(gcs))return null;
@@ -39,13 +39,17 @@ export function calculateSofa(v:Values):number[]|null{
 }
 export default function SofaTool({onBack}:{onBack:()=>void}){
  const [values,setValues]=useState<Values>({}),[copied,setCopied]=useState(false),[error,setError]=useState(false);
- const scores=calculateSofa(values),total=scores?.reduce((a,b)=>a+b,0)??null;
+ const [units,setUnits]=useState<Values>({});
+ const normalized={...values};
+ for(const [id,factor] of Object.entries({pf:7.50062,map:7.50062,bilirubin:17.1,creatinine:88.4})){if(units[id]==="alt"&&values[id]?.trim())normalized[id]=String(Number(values[id].replace(",","."))*factor);}
+ const scores=calculateSofa(normalized),total=scores?.reduce((a,b)=>a+b,0)??null;
  const note=total===null?"":`SOFA: ${total}/24 (дыхание ${scores![0]}, коагуляция ${scores![1]}, печень ${scores![2]}, ССС ${scores![3]}, ЦНС ${scores![4]}, почки ${scores![5]}).`;
  const copy=async()=>{try{await navigator.clipboard.writeText(note);setCopied(true);setError(false);}catch{setError(true);}};
  return <><button className="back" onClick={onBack}><ArrowLeft size={17}/> Все шкалы</button><div className="page-heading"><span className="overline">{sofaMeta.category}</span><h1>{sofaMeta.title}</h1><p className="muted">{sofaMeta.subtitle}</p></div><section className="calculator">
  <div className="calchead"><div><span className="overline">{sofaMeta.shortTitle}</span><h2>{sofaMeta.cardTitle}</h2></div><div className="score">{total??"—"}<small>/24</small></div></div><p className="disclaimer">{sofaMeta.instruction}</p>
- <div className="gcsgrid">{inputs.map(field=><label key={field.id}><span>{field.label}</span>{field.type==="select"?<select value={values[field.id]??""} onChange={e=>{setValues(prev=>({...prev,[field.id]:e.target.value}));setCopied(false);}}><option value="">Выберите</option>{field.options?.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select>:<input type="number" min="0" step="any" inputMode="decimal" value={values[field.id]??""} onChange={e=>{setValues(prev=>({...prev,[field.id]:e.target.value}));setCopied(false);}} placeholder="Введите значение"/>}</label>)}</div>
+ <div className="gcsgrid">{inputs.map(field=><label key={field.id}><span>{field.type==="number"?field.label.split(",")[0]:field.label}</span>{field.type==="select"?<select value={values[field.id]??""} onChange={e=>{setValues(prev=>({...prev,[field.id]:e.target.value}));setCopied(false);}}><option value="">Выберите</option>{field.options?.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select>:<div style={{display:"flex",alignItems:"center",border:"1px solid currentColor",borderRadius:8,overflow:"hidden",minWidth:0}}><input type="text" style={{flex:1,minWidth:0,width:0,border:0,borderRadius:0}} min="0" step="any" inputMode="decimal" value={values[field.id]??""} onChange={e=>{setValues(prev=>({...prev,[field.id]:e.target.value}));setCopied(false);}} placeholder="Введите значение"/>{["pf","map","bilirubin","creatinine"].includes(field.id)?<select aria-label={field.label+" — единицы"} style={{width:"auto",maxWidth:"55%",border:0,borderLeft:"1px solid currentColor",borderRadius:0}} value={units[field.id]??"base"} onChange={e=>{setUnits(p=>({...p,[field.id]:e.target.value}));setValues(p=>({...p,[field.id]:""}));setCopied(false);}}><option value="base">{field.id==="pf"||field.id==="map"?"мм рт. ст.":"мкмоль/л"}</option><option value="alt">{field.id==="pf"||field.id==="map"?"кПа":"мг/дл"}</option></select>:<span style={{padding:"0 10px",whiteSpace:"nowrap"}}>{field.id==="platelets"?"×10⁹/л":field.id==="gcs"?"баллы":"мл"}</span>}</div>}</label>)}</div>
  {scores&&<><div className="result"><span>Результат</span><strong>{note}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
+ <button type="button" className="back" onClick={()=>{setValues({});setUnits({});setCopied(false);setError(false);}}>Сбросить поля</button>
  {error&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
  <p className="disclaimer">{sofaMeta.disclaimer}</p><p className="disclaimer">Источник: <a href={sofaMeta.sourceUrl} target="_blank" rel="noopener noreferrer">{sofaMeta.sourceLabel}</a>.</p></section></>;
 }
