@@ -14,3 +14,7 @@ test("FOUR incomplete and invalid",()=>{assert.equal(calculateFour({E:0,M:0,B:0}
 test("ASA classes and emergency suffix",()=>{for(const c of ["I","II","III","IV","V"]){assert.ok(formatAsa(c,false).startsWith("ASA PS "+c+" —"));assert.ok(formatAsa(c,true).startsWith("ASA PS "+c+"E —"));}assert.ok(formatAsa("VI",true).startsWith("ASA PS VI —"));assert.equal(formatAsa(null,true),"");assert.equal(formatAsa("VII",false),"");});
 test("RASS complete unique ordered score catalog",()=>{assert.deepEqual(rass.map(x=>x.score),[4,3,2,1,0,-1,-2,-3,-4,-5]);assert.ok(rass.every(x=>x.name&&x.detail));});
 test("qSOFA all combinations at thresholds",()=>{for(const rr of [21,22])for(const bp of [100,101])for(const mental of [false,true])assert.equal(calculateQsofa(rr,bp,mental),Number(rr===22)+Number(bp===100)+Number(mental));});
+
+test("FOUR NT in any domain prevents total",()=>{
+ for(const key of ["E","M","B","R"])assert.equal(calculateFour({E:4,M:4,B:4,R:4,[key]:"NT"}),null);
+});
