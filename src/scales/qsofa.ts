@@ -1,4 +1,5 @@
 export const qsofaMeta = {
+  validation: {resp:{required:true,min:0,integer:true,unit:'1/мин'},sbp:{required:true,min:0,integer:true,unit:'мм рт. ст.'},mental:{required:true}},
   category: "КЛИНИЧЕСКАЯ ШКАЛА",
   title: "qSOFA — быстрая оценка риска при подозрении на инфекцию",
   subtitle: "quick Sequential Organ Failure Assessment",
