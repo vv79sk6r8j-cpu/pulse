@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
 export const renalMeta={
- validation:{age:{required:true,min:18,integer:true},creatinine:{required:true,min:Number.MIN_VALUE,warnMin:8.8,warnMax:999},weight:{min:Number.MIN_VALUE}},
+ anthropometryValidationSource:"Soh et al., doi:10.1136/jech-2025-225333; provisional research anthropometry bounds, not ICU-specific; pending source and clinical review",validation:{age:{required:true,min:18,integer:true},creatinine:{required:true,min:Number.MIN_VALUE,warnMin:8.8,warnMax:999},weight:{min:Number.MIN_VALUE,warnMin:24.9,warnMax:453.6}},
  validationSource:"SOFA-2 JAMA 2025 supplementary eTable 2 (joi250090supp2); research plausibility ranges, provisional nonblocking warnings",
  category:"КЛИНИЧЕСКИЙ КАЛЬКУЛЯТОР",
  title:"Оценка функции почек",
