@@ -12,14 +12,16 @@ import InfusionTool, { infusionMeta } from "./calculators/infusion";
 import DocumentViewer, { documentTemplates } from "./documents/DocumentViewer";
 import PeArticle from "./PeArticle";
 import { useState } from "react";
-import { Activity, BookOpen, Calculator, ClipboardList, FileText, Search, House, ArrowUpRight, Menu, X, ChevronRight, ShieldCheck, Copy, Check, ArrowLeft, MessageSquareWarning, Send, ExternalLink } from "lucide-react";
+import { BookOpen, Calculator, ClipboardList, FileText, Search, House, ArrowUpRight, Menu, X, ChevronRight, ShieldCheck, Copy, Check, ArrowLeft, MessageSquareWarning, Send, ExternalLink } from "lucide-react";
 
 type Section = "Главная" | "Теория" | "Шкалы и расчёты" | "POCUS" | "Документы" | "Справочники";
 type Page = Section | "GCS" | "RASS" | "qSOFA" | "ASA" | "FOUR" | "SOFA" | "IBW" | "Renal" | "Infusion" | "KDIGO" | "preoperative-questionnaire" | "patient-memos" | "Feedback" | "PE";
+function PocusIcon({size=24}:{size?:number|string}){return <svg width={size} height={size} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 25Q32 17 43 25L42 33Q41 38 37 42L36 54Q32 59 28 54L27 42Q23 38 22 33Z"/><path d="M21.5 29Q32 22 42.5 29"/><path d="M32 44V49"/><path d="M32 56C32 65 15 61 15 52V46"/><path d="M18 18L11 7Q32 -2 53 7L46 18"/><path d="M24 11Q32 6 40 11"/><path d="M28 16Q32 13 36 16"/></svg>}
+
 const sections = [
  {title:"Теория" as Section,description:"Конспекты, клинические алгоритмы и рекомендации",icon:BookOpen},
  {title:"Шкалы и расчёты" as Section,description:"Оценка состояния и клинические калькуляторы",icon:Calculator},
- {title:"POCUS" as Section,description:"Протоколы ультразвукового обследования",icon:Activity},
+ {title:"POCUS" as Section,description:"Протоколы ультразвукового обследования",icon:PocusIcon},
  {title:"Документы" as Section,description:"Дневники, консультации и шаблоны",icon:FileText},
  {title:"Справочники" as Section,description:"Краткие справочные материалы",icon:ClipboardList}
 ];
