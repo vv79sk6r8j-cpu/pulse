@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
 export const sofaMeta={
- validation:{pf:{required:true,min:Number.MIN_VALUE},platelets:{required:true,min:0},bilirubin:{required:true,min:0},map:{required:true,min:0},gcs:{required:true,min:3,max:15},creatinine:{required:true,min:Number.MIN_VALUE},urine:{required:true,min:0}},
+ validation:{pf:{required:true,min:Number.MIN_VALUE},platelets:{required:true,min:0},bilirubin:{required:true,min:0},map:{required:true,min:0},gcs:{required:true,min:3,max:15,integer:true},creatinine:{required:true,min:Number.MIN_VALUE},urine:{required:true,min:0}},
  category:"КЛИНИЧЕСКАЯ ШКАЛА",
  title:"SOFA — оценка органной дисфункции",
  subtitle:"Sequential Organ Failure Assessment · оригинальная SOFA",
@@ -30,7 +30,7 @@ const inputs=[
 const numeric=(v:string)=>v.trim()===""?null:parseDecimal(v);
 export function calculateSofa(v:Values,units:Values={}):number[]|null{
  const pf=numeric(v.pf??""),pl=numeric(v.platelets??""),bil=numeric(v.bilirubin??""),map=numeric(v.map??""),gcs=numeric(v.gcs??""),cr=numeric(v.creatinine??""),ur=numeric(v.urine??"");
- if(Object.entries(sofaMeta.validation).some(([id,rule])=>validateNumeric(v[id]??'',rule,true)?.kind==='error')||!v.respSupport||!v.pressor||!Number.isInteger(gcs))return null;
+ if(Object.entries(sofaMeta.validation).some(([id,rule])=>validateNumeric(v[id]??'',rule,true)?.kind==='error')||!v.respSupport||!v.pressor)return null;
  const respiratory=pf!<100&&v.respSupport==="yes"?4:pf!<200&&v.respSupport==="yes"?3:pf!<300?2:pf!<400?1:0;
  const coag=pl!<20?4:pl!<50?3:pl!<100?2:pl!<150?1:0;
  const liver=units.bilirubin==='alt'?(bil!>=12?4:bil!>=6?3:bil!>=2?2:bil!>=1.2?1:0):(bil!>204?4:bil!>=102?3:bil!>=33?2:bil!>=20?1:0);
@@ -43,7 +43,7 @@ export function calculateSofa(v:Values,units:Values={}):number[]|null{
 export default function SofaTool({onBack}:{onBack:()=>void}){
  const [values,setValues]=useState<Values>({}),[copied,setCopied]=useState(false),[error,setError]=useState(false);
  const [attempted,setAttempted]=useState(false);
- const issueFor=(id:string,type:string):FieldIssue|undefined=>{const raw=values[id]??'';if(type==='select')return attempted&&!raw?{kind:'error',message:'Выберите значение.'}:undefined;const issue=validateNumeric(raw,sofaMeta.validation[id as keyof typeof sofaMeta.validation],attempted);return issue??(attempted&&id==='gcs'&&raw&&!Number.isInteger(parseDecimal(raw))?{kind:'error',message:'Введите целое число баллов.'}:undefined);};
+ const issueFor=(id:string,type:string):FieldIssue|undefined=>{const raw=values[id]??'';if(type==='select')return attempted&&!raw?{kind:'error',message:'Выберите значение.'}:undefined;const issue=validateNumeric(raw,sofaMeta.validation[id as keyof typeof sofaMeta.validation],attempted);return issue;};
  const [units,setUnits]=useState<Values>({});
  const normalized={...values};
  for(const [id,factor] of Object.entries({pf:7.50062,map:7.50062})){if(units[id]==="alt"&&values[id]?.trim())normalized[id]=String(parseDecimal(values[id])*factor);}
