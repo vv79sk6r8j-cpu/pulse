@@ -46,11 +46,11 @@ const domains=[
   [0,"Интубирован, дыхание в ритме аппарата ИВЛ или апноэ"]
  ]}
 ] as const;
+export function calculateFour(scores:Record<string,number>){return domains.every(d=>d.options.some(([score])=>score===scores[d.id]))?domains.reduce((n,d)=>n+scores[d.id],0):null;}
 export default function FourTool({onBack}:{onBack:()=>void}){
  const [attempted,setAttempted]=useState(false);
  const [scores,setScores]=useState<Record<string,number>>({}),[copied,setCopied]=useState(false),[error,setError]=useState(false);
- const complete=domains.every(d=>d.options.some(([score])=>score===scores[d.id]));
- const total=complete?domains.reduce((n,d)=>n+scores[d.id],0):null;
+ const total=calculateFour(scores);
  const result=total===null?"":`FOUR: E${scores.E} M${scores.M} B${scores.B} R${scores.R} = ${total}/16 баллов.`;
  const copy=async()=>{try{await navigator.clipboard.writeText(result);setCopied(true);setError(false);}catch{setError(true);}};
  return <><button className="back" onClick={onBack}><ArrowLeft size={17}/> Все шкалы</button>
