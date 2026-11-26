@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
 export const fourMeta={
+ validation:{components:{required:true}},
  category:"КЛИНИЧЕСКАЯ ШКАЛА",
  title:"FOUR — оценка уровня сознания",
  subtitle:"Full Outline of UnResponsiveness",
@@ -48,7 +49,7 @@ const domains=[
 export default function FourTool({onBack}:{onBack:()=>void}){
  const [attempted,setAttempted]=useState(false);
  const [scores,setScores]=useState<Record<string,number>>({}),[copied,setCopied]=useState(false),[error,setError]=useState(false);
- const complete=domains.every(d=>scores[d.id]!==undefined);
+ const complete=domains.every(d=>d.options.some(([score])=>score===scores[d.id]));
  const total=complete?domains.reduce((n,d)=>n+scores[d.id],0):null;
  const result=total===null?"":`FOUR: E${scores.E} M${scores.M} B${scores.B} R${scores.R} = ${total}/16 баллов.`;
  const copy=async()=>{try{await navigator.clipboard.writeText(result);setCopied(true);setError(false);}catch{setError(true);}};
@@ -56,7 +57,7 @@ export default function FourTool({onBack}:{onBack:()=>void}){
  <div className="page-heading"><span className="overline">{fourMeta.category}</span><h1>{fourMeta.title}</h1><p className="muted">{fourMeta.subtitle}</p></div>
  <section className="calculator"><div className="calchead"><div><span className="overline">{fourMeta.shortTitle}</span><h2>{fourMeta.cardTitle}</h2></div><div className="score">{total??"—"}<small>/16</small></div></div>
  <p className="disclaimer">{fourMeta.instruction}</p>
- {domains.map(d=><div key={d.id} className="scale-domain"><h3>{d.title}</h3><div className="scale-options" style={attempted&&scores[d.id]===undefined?{outline:"1px solid #dc2626",borderRadius:8}:undefined}>{d.options.map(([score,label])=><button key={score} className={"scale-option "+(scores[d.id]===score?"active":"")} aria-pressed={scores[d.id]===score} onClick={()=>{setScores(prev=>({...prev,[d.id]:score}));setCopied(false);}}><strong>{score}</strong><span><b>{label}</b></span></button>)}</div><FieldFeedback issue={attempted&&scores[d.id]===undefined?{kind:"error",message:"Выберите ответ."}:undefined}/></div>)}
+ {domains.map(d=><div key={d.id} className="scale-domain"><h3>{d.title}</h3><div className="scale-options" style={attempted&&fourMeta.validation.components.required&&scores[d.id]===undefined?{outline:"1px solid #dc2626",borderRadius:8}:undefined}>{d.options.map(([score,label])=><button key={score} className={"scale-option "+(scores[d.id]===score?"active":"")} aria-pressed={scores[d.id]===score} onClick={()=>{setScores(prev=>({...prev,[d.id]:score}));setCopied(false);}}><strong>{score}</strong><span><b>{label}</b></span></button>)}</div><FieldFeedback issue={attempted&&fourMeta.validation.components.required&&scores[d.id]===undefined?{kind:"error",message:"Выберите ответ."}:undefined}/></div>)}
  {result&&<><div className="result"><span>Результат</span><strong>{result}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
  <button className="copy-button" onClick={()=>setAttempted(true)}>Проверить ввод и рассчитать</button>
  <button className="back" onClick={()=>{setAttempted(false);setScores({});setCopied(false);setError(false);}}>Сбросить поля</button>{error&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
