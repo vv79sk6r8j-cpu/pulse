@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
 export const gcsMeta = {
+ validation:{components:{required:true,allowNotTestable:true}},
  category: "КЛИНИЧЕСКАЯ ШКАЛА",
  title: "Шкала комы Глазго",
  subtitle: "Glasgow Coma Scale · оценка уровня сознания",
@@ -34,7 +35,7 @@ export default function GcsTool({onBack}:{onBack:()=>void}){
       <div className="page-heading"><span className="overline">{gcsMeta.category}</span><h1>{gcsMeta.title}</h1><p className="muted">{gcsMeta.subtitle}</p></div>
       <button className="back" onClick={onBack}><ArrowLeft size={17}/> Все шкалы</button>
       <section className="calculator"><div className="calchead"><div><span className="overline">GLASGOW COMA SCALE</span><h2>{gcsMeta.cardTitle}</h2></div><div className="score">{total??"—"}<small>/15</small></div></div>
-       <div className="gcsgrid">{gcs.map((category,i)=><label key={category.name}><span>{category.name}</span><select aria-invalid={attempted&&!scores[i]} style={attempted&&!scores[i]?{borderColor:"#dc2626"}:undefined} value={scores[i]} onChange={e=>{setScores(prev=>prev.map((v,j)=>i===j?e.target.value:v));setCopied(false);setCopyError(false);}}><option value="">Выберите</option><option value="NT">Не оценивается (NT)</option>{category.values.map(([name,value])=><option key={value} value={value}>{value} — {name}</option>)}</select><FieldFeedback issue={attempted&&!scores[i]?{kind:"error",message:"Выберите ответ или NT."}:undefined}/></label>)}</div>
+       <div className="gcsgrid">{gcs.map((category,i)=><label key={category.name}><span>{category.name}</span><select aria-invalid={attempted&&gcsMeta.validation.components.required&&!scores[i]} style={attempted&&gcsMeta.validation.components.required&&!scores[i]?{borderColor:"#dc2626"}:undefined} value={scores[i]} onChange={e=>{setScores(prev=>prev.map((v,j)=>i===j?e.target.value:v));setCopied(false);setCopyError(false);}}><option value="">Выберите</option>{gcsMeta.validation.components.allowNotTestable&&<option value="NT">Не оценивается (NT)</option>}{category.values.map(([name,value])=><option key={value} value={value}>{value} — {name}</option>)}</select><FieldFeedback issue={attempted&&gcsMeta.validation.components.required&&!scores[i]?{kind:"error",message:"Выберите ответ или NT."}:undefined}/></label>)}</div>
        <div className="result"><span>Результат</span><strong>{result}</strong></div>
        <div className="interpretation"><span className="overline">ИНТЕРПРЕТАЦИЯ</span><p>{total===null?"Сумма недоступна при неполной оценке.":interpretation(total)}</p></div>
        <button className="copy-button" disabled={!scores.every(Boolean)} onClick={copyResult}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button>
