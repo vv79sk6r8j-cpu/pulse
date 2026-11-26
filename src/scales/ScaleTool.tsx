@@ -1,3 +1,4 @@
+import {UnitFieldFrame,UnitSuffix,numericInputStyle,parseDecimal} from "../components/NumericInputWithUnit";
 import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 import { rass, rassSource, rassMeta } from "./rass";
@@ -15,8 +16,8 @@ export default function EarlyScaleTool({kind,onBack}:{kind:EarlyScale,onBack:()=
   const [copyError,setCopyError]=useState(false);
   const isRass=kind==="RASS";
   const meta=isRass?rassMeta:qsofaMeta;
-  const rr=resp.trim()===""?null:Number(resp);
-  const bp=sbp.trim()===""?null:Number(sbp);
+  const rr=resp.trim()===""?null:parseDecimal(resp);
+  const bp=sbp.trim()===""?null:parseDecimal(sbp);
   const validRR=rr!==null&&Number.isFinite(rr)&&Number.isInteger(rr)&&rr>=0&&rr<=100;
   const validBP=bp!==null&&Number.isFinite(bp)&&Number.isInteger(bp)&&bp>=20&&bp<=300;
   const complete=validRR&&validBP&&mental!==null;
@@ -36,7 +37,7 @@ export default function EarlyScaleTool({kind,onBack}:{kind:EarlyScale,onBack:()=
         {complete&&<div className="interpretation"><span className="overline">ИНТЕРПРЕТАЦИЯ</span><p>{total!>=2?"2–3 балла: повышенный риск неблагоприятного исхода при подозрении на инфекцию. Требуется дальнейшая клиническая оценка.":"0–1 балл: критерий повышенного риска qSOFA не достигнут; сепсис этим не исключается."}</p></div>}
       </>}
       {result&&<><div className="result"><span>Результат</span><strong>{result}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
-      {copyError&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
+      <button className="back" onClick={()=>{setRassScore(null);setResp("");setSbp("");setMental(null);setCopied(false);setCopyError(false);}}>Сбросить поля</button>{copyError&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
       <p className="disclaimer">{meta.disclaimer}</p>
       <p className="disclaimer">Источник: {isRass?<a href={rassSource} target="_blank" rel="noopener noreferrer">{rassMeta.sourceLabel}</a>:<a href={qsofaSource} target="_blank" rel="noopener noreferrer">{qsofaMeta.sourceLabel}</a>}.</p>
     </section></>;
