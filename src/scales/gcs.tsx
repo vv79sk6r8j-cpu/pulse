@@ -23,12 +23,13 @@ const gcs=[
 ] as const;
 function shortInterpretation(total:number){return total===15?"Максимальная оценка GCS": "Снижение оценки GCS; интерпретировать с учётом компонентов и клинического контекста.";}
 function interpretation(total:number){return shortInterpretation(total);}
+export function calculateGcs(scores:string[]){return scores.length===gcs.length&&gcs.every((d,i)=>d.values.some(([,v])=>String(v)===scores[i]))?scores.reduce((a,b)=>a+Number(b),0):null;}
 export default function GcsTool({onBack}:{onBack:()=>void}){
  const [attempted,setAttempted]=useState(false);
  const [scores,setScores]=useState<string[]>(["","",""]);
  const [copied,setCopied]=useState(false);
  const [copyError,setCopyError]=useState(false);
- const total=scores.every(s=>s!==""&&s!=="NT")?scores.reduce((a,b)=>a+Number(b),0):null;
+ const total=calculateGcs(scores);
  const result="GCS: E"+(scores[0]||"—")+" V"+(scores[1]||"—")+" M"+(scores[2]||"—")+(total===null?"; сумма не определяется.":" = "+total+"/15.");
  const copyResult=async()=>{const text=result;try{await navigator.clipboard.writeText(text);setCopied(true);setCopyError(false);}catch{setCopyError(true);setCopied(false);}};
  return      <>
