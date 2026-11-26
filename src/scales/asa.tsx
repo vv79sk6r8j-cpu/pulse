@@ -24,11 +24,11 @@ const classes=[
  {value:"V",title:"Умирающий пациент",detail:"Пациент, который, как ожидается, не выживет без операции."},
  {value:"VI",title:"Констатированная смерть мозга",detail:"Пациент с констатированной смертью мозга, органы которого изымаются для донорства."}
 ] as const;
+export function formatAsa(value:string|null,emergency:boolean){const selected=classes.find(x=>x.value===value);return selected?`ASA PS ${value}${emergency&&!asaMeta.validation.emergency.excludedClasses.includes(value??'')?'E':''} — ${selected.title.toLowerCase()}.`:'';}
 export default function AsaTool({onBack}:{onBack:()=>void}){
  const [attempted,setAttempted]=useState(false);
  const [value,setValue]=useState<string|null>(null),[emergency,setEmergency]=useState(false),[copied,setCopied]=useState(false),[error,setError]=useState(false);
- const selected=classes.find(x=>x.value===value);
- const result=selected?`ASA PS ${value}${emergency?"E":""} — ${selected.title.toLowerCase()}.`:"";
+ const result=formatAsa(value,emergency);
  const copy=async()=>{try{await navigator.clipboard.writeText(result);setCopied(true);setError(false);}catch{setError(true);}};
  return <><button className="back" onClick={onBack}><ArrowLeft size={17}/> Все шкалы</button>
  <div className="page-heading"><span className="overline">{asaMeta.category}</span><h1>{asaMeta.title}</h1><p className="muted">{asaMeta.subtitle}</p></div>
