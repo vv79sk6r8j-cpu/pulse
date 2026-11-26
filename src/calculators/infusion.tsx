@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
 export const infusionMeta={
- validation:{weight:{required:true,min:Number.MIN_VALUE},mg:{required:true,min:Number.MIN_VALUE},volume:{required:true,min:Number.MIN_VALUE},dose:{required:true,min:0}},
+ anthropometryValidationSource:"Soh et al., doi:10.1136/jech-2025-225333; provisional research anthropometry bounds, not ICU-specific; pending source and clinical review",validation:{weight:{required:true,min:Number.MIN_VALUE,warnMin:24.9,warnMax:453.6},mg:{required:true,min:Number.MIN_VALUE},volume:{required:true,min:Number.MIN_VALUE},dose:{required:true,min:0}},
  category:"КЛИНИЧЕСКИЙ КАЛЬКУЛЯТОР",
  title:"Расчёт инфузии вазоактивных препаратов",
  subtitle:"Прямой и обратный расчёт",
