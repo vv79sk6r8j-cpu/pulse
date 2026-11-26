@@ -19,23 +19,24 @@ const gcs=[
  {name:"Речевая реакция (V)",values:[["Ориентирован",5],["Спутанная речь",4],["Отдельные слова",3],["Нечленораздельные звуки",2],["Отсутствует",1]]},
  {name:"Двигательная реакция (M)",values:[["Выполняет команды",6],["Локализует боль",5],["Отдёргивает на боль",4],["Патологическое сгибание",3],["Разгибание",2],["Отсутствует",1]]}
 ] as const;
-function shortInterpretation(total:number){if(total===15)return "ясное сознание";if(total>=13)return "умеренное оглушение";if(total>=10)return "глубокое оглушение";if(total>=8)return "сопор";if(total>=6)return "умеренная кома";if(total>=4)return "глубокая кома";return "запредельная кома";}
+function shortInterpretation(total:number){return total===15?"Максимальная оценка GCS": "Снижение оценки GCS; интерпретировать с учётом компонентов и клинического контекста.";}
 function interpretation(total:number){return shortInterpretation(total);}
 export default function GcsTool({onBack}:{onBack:()=>void}){
- const [scores,setScores]=useState<[number,number,number]>([4,5,6]);
+ const [scores,setScores]=useState<string[]>(["","",""]);
  const [copied,setCopied]=useState(false);
  const [copyError,setCopyError]=useState(false);
- const total=scores.reduce((a,b)=>a+b,0);
- const copyResult=async()=>{const text="По шкале комы Глазго (GCS): E"+scores[0]+"V"+scores[1]+"M"+scores[2]+", "+total+" баллов — "+shortInterpretation(total)+".";try{await navigator.clipboard.writeText(text);setCopied(true);setCopyError(false);}catch{setCopyError(true);setCopied(false);}};
+ const total=scores.every(s=>s!==""&&s!=="NT")?scores.reduce((a,b)=>a+Number(b),0):null;
+ const result="GCS: E"+(scores[0]||"—")+" V"+(scores[1]||"—")+" M"+(scores[2]||"—")+(total===null?"; сумма не определяется.":" = "+total+"/15.");
+ const copyResult=async()=>{const text=result;try{await navigator.clipboard.writeText(text);setCopied(true);setCopyError(false);}catch{setCopyError(true);setCopied(false);}};
  return      <>
       <div className="page-heading"><span className="overline">{gcsMeta.category}</span><h1>{gcsMeta.title}</h1><p className="muted">{gcsMeta.subtitle}</p></div>
       <button className="back" onClick={onBack}><ArrowLeft size={17}/> Все шкалы</button>
-      <section className="calculator"><div className="calchead"><div><span className="overline">GLASGOW COMA SCALE</span><h2>{gcsMeta.cardTitle}</h2></div><div className="score">{total}<small>/15</small></div></div>
-       <div className="gcsgrid">{gcs.map((category,i)=><label key={category.name}><span>{category.name}</span><select value={scores[i]} onChange={e=>{setScores(prev=>prev.map((v,j)=>i===j?Number(e.target.value):v) as [number,number,number]);setCopied(false);setCopyError(false);}}>{category.values.map(([name,value])=><option key={value} value={value}>{value} — {name}</option>)}</select></label>)}</div>
-       <div className="result"><span>Результат</span><strong>E{scores[0]} · V{scores[1]} · M{scores[2]} = {total} баллов</strong></div>
-       <div className="interpretation"><span className="overline">ИНТЕРПРЕТАЦИЯ</span><p>{interpretation(total)}</p></div>
+      <section className="calculator"><div className="calchead"><div><span className="overline">GLASGOW COMA SCALE</span><h2>{gcsMeta.cardTitle}</h2></div><div className="score">{total??"—"}<small>/15</small></div></div>
+       <div className="gcsgrid">{gcs.map((category,i)=><label key={category.name}><span>{category.name}</span><select value={scores[i]} onChange={e=>{setScores(prev=>prev.map((v,j)=>i===j?e.target.value:v));setCopied(false);setCopyError(false);}}><option value="">Выберите</option><option value="NT">Не оценивается (NT)</option>{category.values.map(([name,value])=><option key={value} value={value}>{value} — {name}</option>)}</select></label>)}</div>
+       <div className="result"><span>Результат</span><strong>{result}</strong></div>
+       <div className="interpretation"><span className="overline">ИНТЕРПРЕТАЦИЯ</span><p>{total===null?"Сумма недоступна при неполной оценке.":interpretation(total)}</p></div>
        <button className="copy-button" onClick={copyResult}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button>
-       {copyError&&<p role="alert" className="copy-error">Не удалось скопировать текст. Проверьте разрешение доступа к буферу обмена.</p>}
+       <button className="back" onClick={()=>{setScores(["","",""]);setCopied(false);setCopyError(false);}}>Сбросить поля</button>{copyError&&<p role="alert" className="copy-error">Не удалось скопировать текст. Проверьте разрешение доступа к буферу обмена.</p>}
        <p className="disclaimer">{gcsMeta.disclaimer}</p>
        <p className="disclaimer">Источник: <a href={gcsMeta.sourceUrl} target="_blank" rel="noopener noreferrer">{gcsMeta.sourceLabel}</a></p>
       </section>
