@@ -1,3 +1,4 @@
+import { UnitFieldFrame, UnitSuffix, numericInputStyle, unitSelectStyle, parseDecimal } from "../components/NumericInputWithUnit";
 import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
@@ -22,20 +23,20 @@ export function cockcroftGault(age:number,creatinineMgDl:number,weightKg:number,
 }
 export default function RenalTool({onBack}:{onBack:()=>void}){
  const [age,setAge]=useState(""),[creatinine,setCreatinine]=useState(""),[unit,setUnit]=useState<"umol"|"mgdl">("umol"),[weight,setWeight]=useState(""),[sex,setSex]=useState<"male"|"female"|"">(""),[copied,setCopied]=useState(false),[error,setError]=useState(false);
- const a=Number(age.replace(",",".")),c=Number(creatinine.replace(",",".")),w=Number(weight.replace(",",".")),scr=unit==="umol"?c/88.4:c;
- const base=age!==""&&creatinine!==""&&sex!==""&&Number.isFinite(a)&&a>=18&&a<=120&&Number.isFinite(scr)&&scr>=0.1&&scr<=30;
+ const a=parseDecimal(age),c=parseDecimal(creatinine),w=parseDecimal(weight),scr=unit==="umol"?c/88.4:c;
+ const base=age!==""&&creatinine!==""&&sex!==""&&Number.isFinite(a)&&Number.isInteger(a)&&a>=18&&a<=120&&Number.isFinite(scr)&&scr>=0.1&&scr<=30;
  const validWeight=weight!==""&&Number.isFinite(w)&&w>0&&w<=500;
  const egfr=base?egfr2021(a,scr,sex as "male"|"female"):null;
  const crcl=base&&validWeight?cockcroftGault(a,scr,w,sex as "male"|"female"):null;
- const note=egfr===null?"":`CKD-EPI 2021: ${egfr.toFixed(1)} мл/мин/1,73 м²${crcl===null?"":`; Cockcroft–Gault: ${crcl.toFixed(1)} мл/мин (масса ${w} кг)`}. Креатинин ${c} ${unit==="umol"?"мкмоль/л":"мг/дл"}, возраст ${a} лет.`;
+ const note=egfr===null?"":`CKD-EPI 2021: ${egfr.toFixed(1)} мл/мин/1,73 м²${crcl===null?"":`; Cockcroft–Gault: ${crcl.toFixed(1)} мл/мин (масса ${w} кг)`}. Креатинин ${c} ${unit==="umol"?"мкмоль/л":"мг/дл"}, возраст ${a} лет; пол по формуле: ${sex==="male"?"мужской":"женский"}.`;
  const copy=async()=>{try{await navigator.clipboard.writeText(note);setCopied(true);setError(false);}catch{setError(true);}};
  return <><button className="back" onClick={onBack}><ArrowLeft size={17}/> Все инструменты</button><div className="page-heading"><span className="overline">{renalMeta.category}</span><h1>{renalMeta.title}</h1><p className="muted">{renalMeta.subtitle}</p></div>
  <section className="calculator"><div className="calchead"><div><span className="overline">{renalMeta.shortTitle}</span><h2>{renalMeta.cardTitle}</h2></div><div className="score">{egfr===null?"—":egfr.toFixed(1)}</div></div><p className="disclaimer">{renalMeta.instruction}</p>
  <div className="gcsgrid">
- <label><span>Возраст</span><div style={{display:"flex",alignItems:"center",border:"1px solid currentColor",borderRadius:8,overflow:"hidden",minWidth:0}}><input style={{flex:1,minWidth:0,width:0,border:0,borderRadius:0}} type="text" inputMode="decimal" min="18" max="120" step="1" value={age} onChange={e=>{setAge(e.target.value);setCopied(false);}} placeholder="Например, 65"/><span style={{padding:"0 10px",whiteSpace:"nowrap"}}>лет</span></div></label>
+ <label><span>Возраст</span><UnitFieldFrame><input style={numericInputStyle} type="text" inputMode="decimal" min="18" max="120" step="1" value={age} onChange={e=>{setAge(e.target.value);setCopied(false);}} placeholder="Например, 65"/><UnitSuffix>лет</UnitSuffix></UnitFieldFrame></label>
  <label><span>Пол в формуле</span><select value={sex} onChange={e=>{setSex(e.target.value as typeof sex);setCopied(false);}}><option value="">Выберите</option><option value="male">Мужской</option><option value="female">Женский</option></select></label>
- <label><span>Креатинин</span><div style={{display:"flex",alignItems:"center",border:"1px solid currentColor",borderRadius:8,overflow:"hidden",minWidth:0}}><input style={{flex:1,minWidth:0,width:0,border:0,borderRadius:0}} type="text" inputMode="decimal" min="0" step="any" value={creatinine} onChange={e=>{setCreatinine(e.target.value);setCopied(false);}} placeholder={unit==="umol"?"Например, 100":"Например, 1.1"}/><select aria-label="Единицы креатинина" style={{width:"auto",maxWidth:"55%",border:0,borderLeft:"1px solid currentColor",borderRadius:0}} value={unit} onChange={e=>{setUnit(e.target.value as typeof unit);setCreatinine("");setCopied(false);}}><option value="umol">мкмоль/л</option><option value="mgdl">мг/дл</option></select></div></label>
- <label><span>Фактическая масса тела (для Cockcroft–Gault)</span><div style={{display:"flex",alignItems:"center",border:"1px solid currentColor",borderRadius:8,overflow:"hidden",minWidth:0}}><input style={{flex:1,minWidth:0,width:0,border:0,borderRadius:0}} type="text" inputMode="decimal" min="0" step="any" value={weight} onChange={e=>{setWeight(e.target.value);setCopied(false);}} placeholder="Например, 75"/><span style={{padding:"0 10px",whiteSpace:"nowrap"}}>кг</span></div></label>
+ <label><span>Креатинин</span><UnitFieldFrame><input style={numericInputStyle} type="text" inputMode="decimal" min="0" step="any" value={creatinine} onChange={e=>{setCreatinine(e.target.value);setCopied(false);}} placeholder={unit==="umol"?"Например, 100":"Например, 1.1"}/><select aria-label="Единицы креатинина" style={unitSelectStyle} value={unit} onChange={e=>{setUnit(e.target.value as typeof unit);setCreatinine("");setCopied(false);}}><option value="umol">мкмоль/л</option><option value="mgdl">мг/дл</option></select></UnitFieldFrame></label>
+ <label><span>Фактическая масса тела (для Cockcroft–Gault)</span><UnitFieldFrame><input style={numericInputStyle} type="text" inputMode="decimal" min="0" step="any" value={weight} onChange={e=>{setWeight(e.target.value);setCopied(false);}} placeholder="Например, 75"/><UnitSuffix>кг</UnitSuffix></UnitFieldFrame></label>
  </div>
  {egfr!==null&&<><div className="result"><span>CKD-EPI 2021</span><strong>{egfr.toFixed(1)} мл/мин/1,73 м²</strong></div><div className="result"><span>Cockcroft–Gault</span><strong>{crcl===null?"Введите массу тела":crcl.toFixed(1)+" мл/мин"}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
  <button type="button" className="back" onClick={()=>{setAge("");setCreatinine("");setWeight("");setSex("");setCopied(false);setError(false);}}>Сбросить поля</button>
