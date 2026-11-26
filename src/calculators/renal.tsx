@@ -3,7 +3,8 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
 export const renalMeta={
- validation:{age:{required:true,min:18,integer:true},creatinine:{required:true,min:Number.MIN_VALUE},weight:{min:Number.MIN_VALUE}},
+ validation:{age:{required:true,min:18,integer:true},creatinine:{required:true,min:Number.MIN_VALUE,warnMin:8.8,warnMax:999},weight:{min:Number.MIN_VALUE}},
+ validationSource:"SOFA-2 JAMA 2025 supplementary eTable 2 (joi250090supp2); research plausibility ranges, provisional nonblocking warnings",
  category:"КЛИНИЧЕСКИЙ КАЛЬКУЛЯТОР",
  title:"Оценка функции почек",
  subtitle:"CKD-EPI 2021 · Cockcroft–Gault",
@@ -28,7 +29,7 @@ export default function RenalTool({onBack}:{onBack:()=>void}){
  const a=parseDecimal(age),c=parseDecimal(creatinine),w=parseDecimal(weight),scr=unit==="umol"?c/88.4:c;
  const base=sex!==""&&validateNumeric(age,renalMeta.validation.age,true)?.kind!=="error"&&validateNumeric(creatinine,renalMeta.validation.creatinine,true)?.kind!=="error"&&Number.isFinite(scr)&&scr>0;
  const ageIssue=validateNumeric(age,renalMeta.validation.age,attempted)??(attempted&&age.trim()&&!Number.isInteger(a)?{kind:"error" as const,message:"Введите возраст в полных годах."}:undefined);
- const creatIssue=validateNumeric(creatinine,renalMeta.validation.creatinine,attempted);
+ const creatIssue=validateNumeric(creatinine,{...renalMeta.validation.creatinine,factor:unit==='mgdl'?88.4:1},attempted);
  const weightIssue=validateNumeric(weight,renalMeta.validation.weight,attempted);
  const validWeight=weight!==""&&validateNumeric(weight,renalMeta.validation.weight,true)?.kind!=="error";
  const egfr=base?egfr2021(a,scr,sex as "male"|"female"):null;
