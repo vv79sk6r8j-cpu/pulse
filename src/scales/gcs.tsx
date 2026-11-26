@@ -1,3 +1,4 @@
+import {FieldFeedback} from "../components/NumericInputWithUnit";
 import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
@@ -22,6 +23,7 @@ const gcs=[
 function shortInterpretation(total:number){return total===15?"Максимальная оценка GCS": "Снижение оценки GCS; интерпретировать с учётом компонентов и клинического контекста.";}
 function interpretation(total:number){return shortInterpretation(total);}
 export default function GcsTool({onBack}:{onBack:()=>void}){
+ const [attempted,setAttempted]=useState(false);
  const [scores,setScores]=useState<string[]>(["","",""]);
  const [copied,setCopied]=useState(false);
  const [copyError,setCopyError]=useState(false);
@@ -32,11 +34,12 @@ export default function GcsTool({onBack}:{onBack:()=>void}){
       <div className="page-heading"><span className="overline">{gcsMeta.category}</span><h1>{gcsMeta.title}</h1><p className="muted">{gcsMeta.subtitle}</p></div>
       <button className="back" onClick={onBack}><ArrowLeft size={17}/> Все шкалы</button>
       <section className="calculator"><div className="calchead"><div><span className="overline">GLASGOW COMA SCALE</span><h2>{gcsMeta.cardTitle}</h2></div><div className="score">{total??"—"}<small>/15</small></div></div>
-       <div className="gcsgrid">{gcs.map((category,i)=><label key={category.name}><span>{category.name}</span><select value={scores[i]} onChange={e=>{setScores(prev=>prev.map((v,j)=>i===j?e.target.value:v));setCopied(false);setCopyError(false);}}><option value="">Выберите</option><option value="NT">Не оценивается (NT)</option>{category.values.map(([name,value])=><option key={value} value={value}>{value} — {name}</option>)}</select></label>)}</div>
+       <div className="gcsgrid">{gcs.map((category,i)=><label key={category.name}><span>{category.name}</span><select aria-invalid={attempted&&!scores[i]} style={attempted&&!scores[i]?{borderColor:"#dc2626"}:undefined} value={scores[i]} onChange={e=>{setScores(prev=>prev.map((v,j)=>i===j?e.target.value:v));setCopied(false);setCopyError(false);}}><option value="">Выберите</option><option value="NT">Не оценивается (NT)</option>{category.values.map(([name,value])=><option key={value} value={value}>{value} — {name}</option>)}</select><FieldFeedback issue={attempted&&!scores[i]?{kind:"error",message:"Выберите ответ или NT."}:undefined}/></label>)}</div>
        <div className="result"><span>Результат</span><strong>{result}</strong></div>
        <div className="interpretation"><span className="overline">ИНТЕРПРЕТАЦИЯ</span><p>{total===null?"Сумма недоступна при неполной оценке.":interpretation(total)}</p></div>
-       <button className="copy-button" onClick={copyResult}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button>
-       <button className="back" onClick={()=>{setScores(["","",""]);setCopied(false);setCopyError(false);}}>Сбросить поля</button>{copyError&&<p role="alert" className="copy-error">Не удалось скопировать текст. Проверьте разрешение доступа к буферу обмена.</p>}
+       <button className="copy-button" disabled={!scores.every(Boolean)} onClick={copyResult}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button>
+       <button className="copy-button" onClick={()=>setAttempted(true)}>Проверить ввод и рассчитать</button>
+ <button className="back" onClick={()=>{setAttempted(false);setScores(["","",""]);setCopied(false);setCopyError(false);}}>Сбросить поля</button>{copyError&&<p role="alert" className="copy-error">Не удалось скопировать текст. Проверьте разрешение доступа к буферу обмена.</p>}
        <p className="disclaimer">{gcsMeta.disclaimer}</p>
        <p className="disclaimer">Источник: <a href={gcsMeta.sourceUrl} target="_blank" rel="noopener noreferrer">{gcsMeta.sourceLabel}</a></p>
       </section>
