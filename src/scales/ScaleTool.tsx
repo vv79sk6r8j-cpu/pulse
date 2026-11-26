@@ -1,4 +1,4 @@
-import {UnitFieldFrame,UnitSuffix,numericInputStyle,parseDecimal} from "../components/NumericInputWithUnit";
+import {UnitFieldFrame,UnitSuffix,numericInputStyle,parseDecimal,validateNumeric,FieldFeedback,type FieldIssue} from "../components/NumericInputWithUnit";
 import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 import { rass, rassSource, rassMeta } from "./rass";
@@ -14,12 +14,15 @@ export default function EarlyScaleTool({kind,onBack}:{kind:EarlyScale,onBack:()=
   const [mental,setMental]=useState<"normal"|"altered"|null>(null);
   const [copied,setCopied]=useState(false);
   const [copyError,setCopyError]=useState(false);
+  const [attempted,setAttempted]=useState(false);
   const isRass=kind==="RASS";
   const meta=isRass?rassMeta:qsofaMeta;
   const rr=resp.trim()===""?null:parseDecimal(resp);
   const bp=sbp.trim()===""?null:parseDecimal(sbp);
-  const validRR=rr!==null&&Number.isFinite(rr)&&Number.isInteger(rr)&&rr>=0&&rr<=100;
-  const validBP=bp!==null&&Number.isFinite(bp)&&Number.isInteger(bp)&&bp>=20&&bp<=300;
+  const validRR=rr!==null&&Number.isFinite(rr)&&Number.isInteger(rr)&&rr>=0;
+  const validBP=bp!==null&&Number.isFinite(bp)&&Number.isInteger(bp)&&bp>=0;
+  const issue=(raw:string):FieldIssue|undefined=>validateNumeric(raw,{required:true,min:0},attempted)??(attempted&&raw.trim()&&!Number.isInteger(parseDecimal(raw))?{kind:"error",message:"Введите целое число."}:undefined);
+  const missing:FieldIssue|undefined=attempted?{kind:"error",message:"Выберите вариант."}:undefined;
   const complete=validRR&&validBP&&mental!==null;
   const total=complete?calculateQsofa(rr!,bp!,mental==="altered"):null;
   const selected=rass.find(item=>item.score===rassScore);
@@ -30,14 +33,16 @@ export default function EarlyScaleTool({kind,onBack}:{kind:EarlyScale,onBack:()=
     <section className="calculator">
       {isRass?<><div className="calchead"><div><span className="overline">{meta.shortTitle}</span><h2>{meta.cardTitle}</h2></div><div className="score">{rassScore===null?"—":rassScore>0?`+${rassScore}`:rassScore}</div></div>
         <p className="disclaimer">{meta.instruction}</p>
-        <div className="scale-options">{rass.map(item=><button key={item.score} type="button" aria-pressed={rassScore===item.score} className={"scale-option "+(rassScore===item.score?"active":"")} onClick={()=>{setRassScore(item.score);setCopied(false);setCopyError(false);}}><strong>{item.score>0?"+":""}{item.score}</strong><span><b>{item.name}</b><small>{item.detail}</small></span></button>)}</div>
+        <div className="scale-options" style={attempted&&rassScore===null?{outline:"1px solid #dc2626",borderRadius:8}:undefined}>{rass.map(item=><button key={item.score} type="button" aria-pressed={rassScore===item.score} className={"scale-option "+(rassScore===item.score?"active":"")} onClick={()=>{setRassScore(item.score);setCopied(false);setCopyError(false);}}><strong>{item.score>0?"+":""}{item.score}</strong><span><b>{item.name}</b><small>{item.detail}</small></span></button>)}</div>
+        <FieldFeedback issue={rassScore===null?missing:undefined}/>
       </>:<><div className="calchead"><div><span className="overline">{meta.shortTitle}</span><h2>{meta.cardTitle}</h2></div><div className="score">{total===null?"—":total}<small>/3</small></div></div>
-        <div className="gcsgrid"><label><span>Частота дыхания, /мин</span><input type="number" inputMode="numeric" min="0" max="100" step="1" value={resp} onChange={e=>{setResp(e.target.value);setCopied(false);}} placeholder="Например, 24"/></label><label><span>Систолическое АД, мм рт. ст.</span><input type="number" inputMode="numeric" min="20" max="300" step="1" value={sbp} onChange={e=>{setSbp(e.target.value);setCopied(false);}} placeholder="Например, 95"/></label><label><span>Изменение сознания (GCS &lt; 15)</span><select value={mental??""} onChange={e=>{setMental(e.target.value===""?null:e.target.value as "normal"|"altered");setCopied(false);}}><option value="">Выберите</option><option value="normal">Нет — 0 баллов</option><option value="altered">Да — 1 балл</option></select></label></div>
+        <div className="gcsgrid"><label><span>Частота дыхания, /мин</span><input type="number" inputMode="numeric" min="0" max="100" step="1" value={resp} onChange={e=>{setResp(e.target.value);setCopied(false);}} placeholder="Например, 24"/></label><label><span>Систолическое АД, мм рт. ст.</span><input type="number" inputMode="numeric" min="20" max="300" step="1" value={sbp} onChange={e=>{setSbp(e.target.value);setCopied(false);}} placeholder="Например, 95"/></label><label><span>Изменение сознания (GCS &lt; 15)</span><select aria-invalid={attempted&&mental===null} style={attempted&&mental===null?{borderColor:"#dc2626"}:undefined} value={mental??""} onChange={e=>{setMental(e.target.value===""?null:e.target.value as "normal"|"altered");setCopied(false);}}><option value="">Выберите</option><option value="normal">Нет — 0 баллов</option><option value="altered">Да — 1 балл</option></select><FieldFeedback issue={mental===null?missing:undefined}/></label></div>
         {(!validRR&&resp!==""||!validBP&&sbp!=="")&&<p role="alert" className="copy-error">Проверьте введённые значения и единицы измерения.</p>}
         {complete&&<div className="interpretation"><span className="overline">ИНТЕРПРЕТАЦИЯ</span><p>{total!>=2?"2–3 балла: повышенный риск неблагоприятного исхода при подозрении на инфекцию. Требуется дальнейшая клиническая оценка.":"0–1 балл: критерий повышенного риска qSOFA не достигнут; сепсис этим не исключается."}</p></div>}
       </>}
       {result&&<><div className="result"><span>Результат</span><strong>{result}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
-      <button className="back" onClick={()=>{setRassScore(null);setResp("");setSbp("");setMental(null);setCopied(false);setCopyError(false);}}>Сбросить поля</button>{copyError&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
+      <button className="copy-button" onClick={()=>setAttempted(true)}>Проверить ввод и рассчитать</button>
+      <button className="back" onClick={()=>{setAttempted(false);setRassScore(null);setResp("");setSbp("");setMental(null);setCopied(false);setCopyError(false);}}>Сбросить поля</button>{copyError&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
       <p className="disclaimer">{meta.disclaimer}</p>
       <p className="disclaimer">Источник: {isRass?<a href={rassSource} target="_blank" rel="noopener noreferrer">{rassMeta.sourceLabel}</a>:<a href={qsofaSource} target="_blank" rel="noopener noreferrer">{qsofaMeta.sourceLabel}</a>}.</p>
     </section></>;
