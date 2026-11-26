@@ -8,7 +8,7 @@ export const sofaMeta={
  subtitle:"Sequential Organ Failure Assessment · оригинальная SOFA",
  shortTitle:"SOFA",
  cardTitle:"Шесть органных систем",
- instruction:"Укажите показатели за выбранный период оценки. Для респираторного компонента используйте PaO₂/FiO₂ (мм рт. ст.) и отметьте респираторную поддержку. Для вазопрессоров учитывается максимальный уровень поддержки; дозы в мкг/кг/мин.",
+ instruction:"Укажите показатели за выбранный период оценки. Для респираторного компонента используйте PaO₂/FiO₂ (мм рт. ст.) и отметьте респираторную поддержку. Для вазопрессоров учитывается максимальный уровень поддержки; дозы в мкг/кг/мин, препараты введены не менее часа. Для билирубина и креатинина применяются опубликованные пороги выбранных единиц; пограничные результаты могут различаться из-за округления исходных таблиц. Для непрерывных диапазонов в мг/дл приняты границы ≥12 и ≥5 соответственно.",
  catalogDescription:"Шесть органных систем, суммарная оценка 0–24 балла",
  disclaimer:"SOFA — динамическая шкала органной дисфункции, не самостоятельный диагноз сепсиса. При отсутствии данных нельзя автоматически считать компонент нормальным. Для исходной SOFA учитывайте клинический контекст, поддержку органов и время измерений. Используется оригинальная версия SOFA, не SOFA-2.",
  sourceLabel:"Vincent JL et al. The SOFA score to describe organ dysfunction/failure. Intensive Care Med. 1996.",
@@ -27,15 +27,16 @@ const inputs=[
  {id:"urine",label:"Диурез за 24 часа, мл",type:"number"}
 ] as const;
 const numeric=(v:string)=>v.trim()===""?null:parseDecimal(v);
-export function calculateSofa(v:Values):number[]|null{
+export function calculateSofa(v:Values,units:Values={}):number[]|null{
  const pf=numeric(v.pf??""),pl=numeric(v.platelets??""),bil=numeric(v.bilirubin??""),map=numeric(v.map??""),gcs=numeric(v.gcs??""),cr=numeric(v.creatinine??""),ur=numeric(v.urine??"");
  if([pf,pl,bil,map,gcs,cr,ur].some(x=>x===null||!Number.isFinite(x)||x<0)||!v.respSupport||!v.pressor||pf!<=0||cr!<=0||gcs!<3||gcs!>15||!Number.isInteger(gcs))return null;
  const respiratory=pf!<100&&v.respSupport==="yes"?4:pf!<200&&v.respSupport==="yes"?3:pf!<300?2:pf!<400?1:0;
  const coag=pl!<20?4:pl!<50?3:pl!<100?2:pl!<150?1:0;
- const liver=bil!>=204?4:bil!>=102?3:bil!>=33?2:bil!>=20?1:0;
+ const liver=units.bilirubin==='alt'?(bil!>=12?4:bil!>=6?3:bil!>=2?2:bil!>=1.2?1:0):(bil!>204?4:bil!>=102?3:bil!>=33?2:bil!>=20?1:0);
  const cv=v.pressor==="ne_high"||v.pressor==="dopamine_high"?4:v.pressor==="ne_low"||v.pressor==="dopamine_mid"?3:v.pressor==="dobutamine"||v.pressor==="dopamine_low"?2:map!<70?1:0;
  const neuro=gcs!<6?4:gcs!<10?3:gcs!<13?2:gcs!<15?1:0;
- const renal=ur!<200||cr!>=440?4:ur!<500||cr!>=300?3:cr!>=171?2:cr!>=110?1:0;
+ const renalCr=units.creatinine==='alt'?(cr!>=5?4:cr!>=3.5?3:cr!>=2?2:cr!>=1.2?1:0):(cr!>440?4:cr!>=300?3:cr!>=171?2:cr!>=110?1:0);
+ const renal=Math.max(renalCr,ur!<200?4:ur!<500?3:0);
  return [respiratory,coag,liver,cv,neuro,renal];
 }
 export default function SofaTool({onBack}:{onBack:()=>void}){
@@ -44,9 +45,9 @@ export default function SofaTool({onBack}:{onBack:()=>void}){
  const issueFor=(id:string,type:string):FieldIssue|undefined=>{const raw=values[id]??'';if(type==='select')return attempted&&!raw?{kind:'error',message:'Выберите значение.'}:undefined;const issue=validateNumeric(raw,{required:true,min:['pf','creatinine'].includes(id)?Number.MIN_VALUE:id==='gcs'?3:0,max:id==='gcs'?15:undefined},attempted);return issue??(attempted&&id==='gcs'&&raw&&!Number.isInteger(parseDecimal(raw))?{kind:'error',message:'Введите целое число баллов.'}:undefined);};
  const [units,setUnits]=useState<Values>({});
  const normalized={...values};
- for(const [id,factor] of Object.entries({pf:7.50062,map:7.50062,bilirubin:17.1,creatinine:88.4})){if(units[id]==="alt"&&values[id]?.trim())normalized[id]=String(parseDecimal(values[id])*factor);}
- const scores=calculateSofa(normalized),total=scores?.reduce((a,b)=>a+b,0)??null;
- const note=total===null?"":`SOFA: ${total}/24 (дыхание ${scores![0]}, коагуляция ${scores![1]}, печень ${scores![2]}, ССС ${scores![3]}, ЦНС ${scores![4]}, почки ${scores![5]}).`+ " Исходные данные: "+inputs.filter(f=>f.type==="number").map(f=>f.label.split(",")[0]+" "+values[f.id]+" "+(units[f.id]==="alt"?(f.id==="pf"||f.id==="map"?"кПа":"мг/дл"):f.label.split(",").slice(1).join(",").trim())).join("; ")+"; поддержка: "+(values.respSupport==="yes"?"да":"нет")+"; вазопрессоры: "+(inputs.find(f=>f.id==="pressor")?.options?.find(o=>o[0]===values.pressor)?.[1]??"—")+".";;
+ for(const [id,factor] of Object.entries({pf:7.50062,map:7.50062})){if(units[id]==="alt"&&values[id]?.trim())normalized[id]=String(parseDecimal(values[id])*factor);}
+ const scores=calculateSofa(normalized,units),total=scores?.reduce((a,b)=>a+b,0)??null;
+ const note=total===null?"":`SOFA: ${total}/24 (дыхание ${scores![0]}, коагуляция ${scores![1]}, печень ${scores![2]}, ССС ${scores![3]}, ЦНС ${scores![4]}, почки ${scores![5]}).`+ " Исходные данные: "+inputs.filter(f=>f.type==="number").map(f=>f.label.split(",")[0]+" "+values[f.id]+" "+(units[f.id]==="alt"?(f.id==="pf"||f.id==="map"?"кПа":"мг/дл"):f.label.split(",").slice(1).join(",").trim())).join("; ")+"; поддержка: "+(values.respSupport==="yes"?"да":"нет")+"; вазопрессоры: "+(inputs.find(f=>f.id==="pressor")?.options?.find(o=>o[0]===values.pressor)?.[1]??"—")+".";
  const copy=async()=>{try{await navigator.clipboard.writeText(note);setCopied(true);setError(false);}catch{setError(true);}};
  return <><button className="back" onClick={onBack}><ArrowLeft size={17}/> Все шкалы</button><div className="page-heading"><span className="overline">{sofaMeta.category}</span><h1>{sofaMeta.title}</h1><p className="muted">{sofaMeta.subtitle}</p></div><section className="calculator">
  <div className="calchead"><div><span className="overline">{sofaMeta.shortTitle}</span><h2>{sofaMeta.cardTitle}</h2></div><div className="score">{total??"—"}<small>/24</small></div></div><p className="disclaimer">{sofaMeta.instruction}</p>
