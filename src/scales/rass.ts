@@ -1,4 +1,5 @@
 export const rassMeta = {
+  validation: {score:{required:true}},
   category: "КЛИНИЧЕСКАЯ ШКАЛА",
   title: "RASS — шкала возбуждения и седации",
   subtitle: "Richmond Agitation–Sedation Scale",
