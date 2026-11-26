@@ -1,5 +1,6 @@
 export const qsofaMeta = {
-  validation: {resp:{required:true,min:0,integer:true,unit:'1/мин'},sbp:{required:true,min:0,integer:true,unit:'мм рт. ст.'},mental:{required:true}},
+  validation: {resp:{required:true,min:0,warnMax:80,integer:true,unit:'1/мин'},sbp:{required:true,min:0,warnMax:400,integer:true,unit:'мм рт. ст.'},mental:{required:true}},
+  validationSources: {resp:"ANZICS Adult Patient Database Dictionary v6.1, respiratory rate 1–80; zero retained for apnea; https://www.anzics.org/wp-content/uploads/2021/03/ANZICS-APD-Dictionary-Version-6.1.pdf",sbp:"CLIF DQA P.2, SBP 0–400; https://clif-icu.com/data-quality"},
   category: "КЛИНИЧЕСКАЯ ШКАЛА",
   title: "qSOFA — быстрая оценка риска при подозрении на инфекцию",
   subtitle: "quick Sequential Organ Failure Assessment",
