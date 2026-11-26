@@ -1,4 +1,4 @@
-import { UnitFieldFrame, UnitSuffix, numericInputStyle, unitSelectStyle, parseDecimal } from "../components/NumericInputWithUnit";
+import { UnitFieldFrame, UnitSuffix, numericInputStyle, unitSelectStyle, parseDecimal, validateNumeric, FieldFeedback, type FieldIssue } from "../components/NumericInputWithUnit";
 import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
@@ -23,6 +23,7 @@ export function cockcroftGault(age:number,creatinineMgDl:number,weightKg:number,
 }
 export default function RenalTool({onBack}:{onBack:()=>void}){
  const [age,setAge]=useState(""),[creatinine,setCreatinine]=useState(""),[unit,setUnit]=useState<"umol"|"mgdl">("umol"),[weight,setWeight]=useState(""),[sex,setSex]=useState<"male"|"female"|"">(""),[copied,setCopied]=useState(false),[error,setError]=useState(false);
+ const [attempted,setAttempted]=useState(false);
  const a=parseDecimal(age),c=parseDecimal(creatinine),w=parseDecimal(weight),scr=unit==="umol"?c/88.4:c;
  const base=age!==""&&creatinine!==""&&sex!==""&&Number.isFinite(a)&&Number.isInteger(a)&&a>=18&&a<=120&&Number.isFinite(scr)&&scr>=0.1&&scr<=30;
  const validWeight=weight!==""&&Number.isFinite(w)&&w>0&&w<=500;
@@ -33,13 +34,14 @@ export default function RenalTool({onBack}:{onBack:()=>void}){
  return <><button className="back" onClick={onBack}><ArrowLeft size={17}/> Все инструменты</button><div className="page-heading"><span className="overline">{renalMeta.category}</span><h1>{renalMeta.title}</h1><p className="muted">{renalMeta.subtitle}</p></div>
  <section className="calculator"><div className="calchead"><div><span className="overline">{renalMeta.shortTitle}</span><h2>{renalMeta.cardTitle}</h2></div><div className="score">{egfr===null?"—":egfr.toFixed(1)}</div></div><p className="disclaimer">{renalMeta.instruction}</p>
  <div className="gcsgrid">
- <label><span>Возраст</span><UnitFieldFrame><input style={numericInputStyle} type="text" inputMode="decimal" min="18" max="120" step="1" value={age} onChange={e=>{setAge(e.target.value);setCopied(false);}} placeholder="Например, 65"/><UnitSuffix>лет</UnitSuffix></UnitFieldFrame></label>
- <label><span>Пол в формуле</span><select value={sex} onChange={e=>{setSex(e.target.value as typeof sex);setCopied(false);}}><option value="">Выберите</option><option value="male">Мужской</option><option value="female">Женский</option></select></label>
- <label><span>Креатинин</span><UnitFieldFrame><input style={numericInputStyle} type="text" inputMode="decimal" min="0" step="any" value={creatinine} onChange={e=>{setCreatinine(e.target.value);setCopied(false);}} placeholder={unit==="umol"?"Например, 100":"Например, 1.1"}/><select aria-label="Единицы креатинина" style={unitSelectStyle} value={unit} onChange={e=>{setUnit(e.target.value as typeof unit);setCreatinine("");setCopied(false);}}><option value="umol">мкмоль/л</option><option value="mgdl">мг/дл</option></select></UnitFieldFrame></label>
- <label><span>Фактическая масса тела (для Cockcroft–Gault)</span><UnitFieldFrame><input style={numericInputStyle} type="text" inputMode="decimal" min="0" step="any" value={weight} onChange={e=>{setWeight(e.target.value);setCopied(false);}} placeholder="Например, 75"/><UnitSuffix>кг</UnitSuffix></UnitFieldFrame></label>
+ <label><span>Возраст</span><UnitFieldFrame issue={validateNumeric(age,{required:true,min:18,max:120},attempted)}><input style={numericInputStyle} type="text" inputMode="decimal" min="18" max="120" step="1" value={age} onChange={e=>{setAge(e.target.value);setCopied(false);}} placeholder="Например, 65"/><UnitSuffix>лет</UnitSuffix></UnitFieldFrame><FieldFeedback issue={validateNumeric(age,{required:true,min:18,max:120},attempted)}/></label>
+ <label><span>Пол в формуле</span><select aria-invalid={attempted&&!sex} style={attempted&&!sex?{borderColor:"#dc2626"}:undefined} value={sex} onChange={e=>{setSex(e.target.value as typeof sex);setCopied(false);}}><option value="">Выберите</option><option value="male">Мужской</option><option value="female">Женский</option></select><FieldFeedback issue={attempted&&!sex?{kind:"error",message:"Выберите пол в формуле."}:undefined}/></label>
+ <label><span>Креатинин</span><UnitFieldFrame issue={validateNumeric(creatinine,{required:true,min:8.84,max:2652,warnMin:30,warnMax:1000,factor:unit==='umol'?1:88.4},attempted)}><input style={numericInputStyle} type="text" inputMode="decimal" min="0" step="any" value={creatinine} onChange={e=>{setCreatinine(e.target.value);setCopied(false);}} placeholder={unit==="umol"?"Например, 100":"Например, 1.1"}/><select aria-label="Единицы креатинина" style={unitSelectStyle} value={unit} onChange={e=>{setUnit(e.target.value as typeof unit);setCreatinine("");setCopied(false);}}><option value="umol">мкмоль/л</option><option value="mgdl">мг/дл</option></select></UnitFieldFrame><FieldFeedback issue={validateNumeric(creatinine,{required:true,min:8.84,max:2652,warnMin:30,warnMax:1000,factor:unit==='umol'?1:88.4},attempted)}/></label>
+ <label><span>Фактическая масса тела (для Cockcroft–Gault)</span><UnitFieldFrame issue={validateNumeric(weight,{required:true,min:Number.MIN_VALUE,max:500,warnMin:30,warnMax:250},attempted)}><input style={numericInputStyle} type="text" inputMode="decimal" min="0" step="any" value={weight} onChange={e=>{setWeight(e.target.value);setCopied(false);}} placeholder="Например, 75"/><UnitSuffix>кг</UnitSuffix></UnitFieldFrame><FieldFeedback issue={validateNumeric(weight,{required:true,min:Number.MIN_VALUE,max:500,warnMin:30,warnMax:250},attempted)}/></label>
  </div>
  {egfr!==null&&<><div className="result"><span>CKD-EPI 2021</span><strong>{egfr.toFixed(1)} мл/мин/1,73 м²</strong></div><div className="result"><span>Cockcroft–Gault</span><strong>{crcl===null?"Введите массу тела":crcl.toFixed(1)+" мл/мин"}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
- <button type="button" className="back" onClick={()=>{setAge("");setCreatinine("");setWeight("");setSex("");setCopied(false);setError(false);}}>Сбросить поля</button>
+ <button type="button" className="copy-button" onClick={()=>setAttempted(true)}>Проверить ввод и рассчитать</button>
+ <button type="button" className="back" onClick={()=>{setAttempted(false);setAge("");setCreatinine("");setWeight("");setSex("");setCopied(false);setError(false);}}>Сбросить поля</button>
  {error&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
  <p className="disclaimer">{renalMeta.disclaimer}</p><p className="disclaimer">Источник: <a href={renalMeta.sourceUrl} target="_blank" rel="noopener noreferrer">{renalMeta.sourceLabel}</a>.</p></section></>;
 }
