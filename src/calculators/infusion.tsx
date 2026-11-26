@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
 export const infusionMeta={
+ validation:{weight:{required:true,min:Number.MIN_VALUE},mg:{required:true,min:Number.MIN_VALUE},volume:{required:true,min:Number.MIN_VALUE},dose:{required:true,min:0}},
  category:"КЛИНИЧЕСКИЙ КАЛЬКУЛЯТОР",
  title:"Расчёт инфузии вазоактивных препаратов",
  subtitle:"Прямой и обратный расчёт",
@@ -52,10 +53,10 @@ export default function InfusionTool({onBack}:{onBack:()=>void}){
  <p className="disclaimer">{infusionMeta.instruction}</p><div className="gcsgrid">
  <label><span>Препарат</span><select value={drug} onChange={e=>{setDrug(e.target.value);setUnit(e.target.value==="vasopressin"?"ЕД/мин":"мкг/кг/мин");setMg("");setDose("");setCopied(false);setError(false);}}>{drugs.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>
  {drug==="other"&&<label><span>Название препарата</span><input value={other} onChange={e=>update(setOther)(e.target.value)}/></label>}
- {selected[2]&&<Field label="Масса тела" issue={validateNumeric(weight,{required:true,min:Number.MIN_VALUE},attempted)} value={weight} onChange={update(setWeight)} unit="кг"/>}
- <Field label="Количество препарата в готовом растворе" issue={validateNumeric(mg,{required:true,min:Number.MIN_VALUE},attempted)} value={mg} onChange={update(setMg)} unit={amountUnit}/>
- <Field label="Конечный объём раствора" issue={validateNumeric(volume,{required:true,min:Number.MIN_VALUE},attempted)} value={volume} onChange={update(setVolume)} unit="мл"/>
- {reverse?<><Field label="Скорость дозатора" issue={validateNumeric(dose,{required:true,min:0},attempted)} value={dose} onChange={update(setDose)} unit="мл/ч"/><label><span>Единицы результата</span><select value={selected[0]} onChange={e=>update(setUnit)(e.target.value)}>{available.map(x=><option key={x[0]}>{x[0]}</option>)}</select></label></>:<Field label="Назначенная доза" issue={validateNumeric(dose,{required:true,min:0},attempted)} value={dose} onChange={update(setDose)} unit={selected[0]} choices={available.map(x=>x[0])} onUnit={u=>{setUnit(u);setDose("");setCopied(false);setError(false);}}/>}</div>
+ {selected[2]&&<Field label="Масса тела" issue={validateNumeric(weight,infusionMeta.validation.weight,attempted)} value={weight} onChange={update(setWeight)} unit="кг"/>}
+ <Field label="Количество препарата в готовом растворе" issue={validateNumeric(mg,infusionMeta.validation.mg,attempted)} value={mg} onChange={update(setMg)} unit={amountUnit}/>
+ <Field label="Конечный объём раствора" issue={validateNumeric(volume,infusionMeta.validation.volume,attempted)} value={volume} onChange={update(setVolume)} unit="мл"/>
+ {reverse?<><Field label="Скорость дозатора" issue={validateNumeric(dose,infusionMeta.validation.dose,attempted)} value={dose} onChange={update(setDose)} unit="мл/ч"/><label><span>Единицы результата</span><select value={selected[0]} onChange={e=>update(setUnit)(e.target.value)}>{available.map(x=><option key={x[0]}>{x[0]}</option>)}</select></label></>:<Field label="Назначенная доза" issue={validateNumeric(dose,infusionMeta.validation.dose,attempted)} value={dose} onChange={update(setDose)} unit={selected[0]} choices={available.map(x=>x[0])} onUnit={u=>{setUnit(u);setDose("");setCopied(false);setError(false);}}/>}</div>
  {result!==null&&<><div className="result"><span>Результат</span><strong>{fmt(result)} {reverse?selected[0]:"мл/ч"} · {fmt(concentration)} {concUnit}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
  {result===null&&<p className="muted">Заполните необходимые поля: масса, количество и объём должны быть положительными, доза или скорость — неотрицательной.</p>}
  <button type="button" className="copy-button" onClick={()=>setAttempted(true)}>Проверить ввод и рассчитать</button>
