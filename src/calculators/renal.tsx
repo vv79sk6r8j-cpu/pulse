@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
 export const renalMeta={
- validation:{age:{required:true,min:18},creatinine:{required:true,min:Number.MIN_VALUE},weight:{min:Number.MIN_VALUE}},
+ validation:{age:{required:true,min:18,integer:true},creatinine:{required:true,min:Number.MIN_VALUE},weight:{min:Number.MIN_VALUE}},
  category:"КЛИНИЧЕСКИЙ КАЛЬКУЛЯТОР",
  title:"Оценка функции почек",
  subtitle:"CKD-EPI 2021 · Cockcroft–Gault",
@@ -26,11 +26,11 @@ export default function RenalTool({onBack}:{onBack:()=>void}){
  const [age,setAge]=useState(""),[creatinine,setCreatinine]=useState(""),[unit,setUnit]=useState<"umol"|"mgdl">("umol"),[weight,setWeight]=useState(""),[sex,setSex]=useState<"male"|"female"|"">(""),[copied,setCopied]=useState(false),[error,setError]=useState(false);
  const [attempted,setAttempted]=useState(false);
  const a=parseDecimal(age),c=parseDecimal(creatinine),w=parseDecimal(weight),scr=unit==="umol"?c/88.4:c;
- const base=age!==""&&creatinine!==""&&sex!==""&&Number.isFinite(a)&&Number.isInteger(a)&&a>=renalMeta.validation.age.min&&Number.isFinite(scr)&&scr>0;
+ const base=sex!==""&&validateNumeric(age,renalMeta.validation.age,true)?.kind!=="error"&&validateNumeric(creatinine,renalMeta.validation.creatinine,true)?.kind!=="error"&&Number.isFinite(scr)&&scr>0;
  const ageIssue=validateNumeric(age,renalMeta.validation.age,attempted)??(attempted&&age.trim()&&!Number.isInteger(a)?{kind:"error" as const,message:"Введите возраст в полных годах."}:undefined);
  const creatIssue=validateNumeric(creatinine,renalMeta.validation.creatinine,attempted);
  const weightIssue=validateNumeric(weight,renalMeta.validation.weight,attempted);
- const validWeight=weight!==""&&Number.isFinite(w)&&w>0;
+ const validWeight=weight!==""&&validateNumeric(weight,renalMeta.validation.weight,true)?.kind!=="error";
  const egfr=base?egfr2021(a,scr,sex as "male"|"female"):null;
  const crcl=base&&validWeight&&a<140?cockcroftGault(a,scr,w,sex as "male"|"female"):null;
  const note=egfr===null?"":`CKD-EPI 2021: ${egfr.toFixed(1)} мл/мин/1,73 м²${crcl===null?"":`; Cockcroft–Gault: ${crcl.toFixed(1)} мл/мин (масса ${w} кг)`}. Креатинин ${c} ${unit==="umol"?"мкмоль/л":"мг/дл"}, возраст ${a} лет; пол по формуле: ${sex==="male"?"мужской":"женский"}.`;
