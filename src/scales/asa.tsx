@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
 export const asaMeta={
+ validation:{physicalStatus:{required:true},emergency:{excludedClasses:["VI"] as readonly string[]}},
  category:"КЛИНИЧЕСКАЯ КЛАССИФИКАЦИЯ",
  title:"ASA Physical Status — классификация физического состояния",
  subtitle:"American Society of Anesthesiologists Physical Status Classification System",
@@ -33,8 +34,8 @@ export default function AsaTool({onBack}:{onBack:()=>void}){
  <div className="page-heading"><span className="overline">{asaMeta.category}</span><h1>{asaMeta.title}</h1><p className="muted">{asaMeta.subtitle}</p></div>
  <section className="calculator"><div className="calchead"><div><span className="overline">{asaMeta.shortTitle}</span><h2>{asaMeta.cardTitle}</h2></div><div className="score">{value??"—"}{emergency&&value?"E":""}</div></div>
  <p className="disclaimer">{asaMeta.instruction}</p>
- <div className="scale-options" style={attempted&&!value?{outline:"1px solid #dc2626",borderRadius:8}:undefined}>{classes.map(item=><button key={item.value} className={"scale-option "+(value===item.value?"active":"")} aria-pressed={value===item.value} onClick={()=>{setValue(item.value);if(item.value==="VI")setEmergency(false);setCopied(false);}}><strong>{item.value}</strong><span><b>{item.title}</b><small>{item.detail}</small></span></button>)}</div><FieldFeedback issue={attempted&&!value?{kind:"error",message:"Выберите класс ASA."}:undefined}/>
- <label className="tool-check"><input type="checkbox" checked={emergency} disabled={value==="VI"} onChange={e=>{setEmergency(value==="VI"?false:e.target.checked);setCopied(false);}}/> <span><b>Экстренность (E)</b> — задержка лечения существенно увеличивает угрозу жизни или части тела. Для ASA VI суффикс E не применяется.</span></label>
+ <div className="scale-options" style={attempted&&asaMeta.validation.physicalStatus.required&&!value?{outline:"1px solid #dc2626",borderRadius:8}:undefined}>{classes.map(item=><button key={item.value} className={"scale-option "+(value===item.value?"active":"")} aria-pressed={value===item.value} onClick={()=>{setValue(item.value);if(asaMeta.validation.emergency.excludedClasses.includes(item.value))setEmergency(false);setCopied(false);}}><strong>{item.value}</strong><span><b>{item.title}</b><small>{item.detail}</small></span></button>)}</div><FieldFeedback issue={attempted&&asaMeta.validation.physicalStatus.required&&!value?{kind:"error",message:"Выберите класс ASA."}:undefined}/>
+ <label className="tool-check"><input type="checkbox" checked={emergency} disabled={asaMeta.validation.emergency.excludedClasses.includes(value??"")} onChange={e=>{setEmergency(asaMeta.validation.emergency.excludedClasses.includes(value??"")?false:e.target.checked);setCopied(false);}}/> <span><b>Экстренность (E)</b> — задержка лечения существенно увеличивает угрозу жизни или части тела. Для ASA VI суффикс E не применяется.</span></label>
  {result&&<><div className="result"><span>Результат</span><strong>{result}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
  <button className="copy-button" onClick={()=>setAttempted(true)}>Проверить ввод и рассчитать</button>
  <button className="back" onClick={()=>{setAttempted(false);setValue(null);setEmergency(false);setCopied(false);setError(false);}}>Сбросить поля</button>{error&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
