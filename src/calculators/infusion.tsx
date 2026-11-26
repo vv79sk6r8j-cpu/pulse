@@ -1,4 +1,4 @@
-import { UnitFieldFrame, UnitSuffix, numericInputStyle, unitSelectStyle, parseDecimal } from "../components/NumericInputWithUnit";
+import { UnitFieldFrame, UnitSuffix, numericInputStyle, unitSelectStyle, parseDecimal, validateNumeric, FieldFeedback, type FieldIssue } from "../components/NumericInputWithUnit";
 import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
@@ -25,11 +25,12 @@ export function convertInfusion(value:number,concentration:number,factor:number,
  return reverse?value*concentration/factor:value*factor/concentration;
 }
 const numeric=parseDecimal;
-function Field({label,value,onChange,unit,choices,onUnit}:{label:string,value:string,onChange:(v:string)=>void,unit:string,choices?:readonly string[],onUnit?:(v:string)=>void}){
- return <label><span>{label}</span><UnitFieldFrame><input aria-label={label} inputMode="decimal" value={value} onChange={e=>onChange(e.target.value)} style={numericInputStyle}/>{choices?<select aria-label={label+" — единицы"} value={unit} onChange={e=>onUnit?.(e.target.value)} style={unitSelectStyle}>{choices.map(u=><option key={u}>{u}</option>)}</select>:<UnitSuffix>{unit}</UnitSuffix>}</UnitFieldFrame></label>;
+function Field({label,value,onChange,unit,choices,onUnit,issue}:{label:string,value:string,onChange:(v:string)=>void,unit:string,choices?:readonly string[],onUnit?:(v:string)=>void;issue?:FieldIssue}){
+ return <label><span>{label}</span><UnitFieldFrame issue={issue}><input aria-invalid={issue?.kind==='error'} aria-label={label} inputMode="decimal" value={value} onChange={e=>onChange(e.target.value)} style={numericInputStyle}/>{choices?<select aria-label={label+" — единицы"} value={unit} onChange={e=>onUnit?.(e.target.value)} style={unitSelectStyle}>{choices.map(u=><option key={u}>{u}</option>)}</select>:<UnitSuffix>{unit}</UnitSuffix>}</UnitFieldFrame><FieldFeedback issue={issue}/></label>;
 }
 export default function InfusionTool({onBack}:{onBack:()=>void}){
  const [drug,setDrug]=useState("norepi"),[weight,setWeight]=useState(""),[mg,setMg]=useState(""),[volume,setVolume]=useState(""),[dose,setDose]=useState(""),[copied,setCopied]=useState(false),[error,setError]=useState(false),[reverse,setReverse]=useState(false),[unit,setUnit]=useState("мкг/кг/мин"),[other,setOther]=useState("");
+ const [attempted,setAttempted]=useState(false);
  const activity=drug==="vasopressin", available=activity?activityUnits:units;
  const selected=available.find(x=>x[0]===unit)??available[0];
  const w=numeric(weight),m=numeric(mg),v=numeric(volume),d=numeric(dose);
@@ -43,7 +44,7 @@ export default function InfusionTool({onBack}:{onBack:()=>void}){
  const amountUnit=activity?"ЕД":"мг",concUnit=activity?"ЕД/мл":"мкг/мл";
  const note=result===null?"":name+": "+fmt(reverse?result:d)+" "+selected[0]+(Number.isFinite(w)&&w>0?"; масса "+w+" кг":"")+"; раствор "+m+" "+amountUnit+"/"+v+" мл ("+fmt(concentration)+" "+concUnit+"); скорость "+fmt(reverse?d:result)+" мл/ч.";
  const update=(fn:(v:string)=>void)=>(value:string)=>{fn(value);setCopied(false);setError(false);};
- const reset=()=>{setWeight("");setMg("");setVolume("");setDose("");setOther("");setCopied(false);setError(false);};
+ const reset=()=>{setAttempted(false);setWeight("");setMg("");setVolume("");setDose("");setOther("");setCopied(false);setError(false);};
  const copy=async()=>{try{await navigator.clipboard.writeText(note);setCopied(true);setError(false);}catch{setError(true);}};
  return <><button className="back" onClick={onBack}><ArrowLeft size={17}/> Все инструменты</button><div className="page-heading"><span className="overline">{infusionMeta.category}</span><h1>{infusionMeta.title}</h1><p className="muted">{infusionMeta.subtitle}</p></div>
  <section className="calculator"><div className="calchead"><div><span className="overline">{infusionMeta.shortTitle}</span><h2>{reverse?"Расчёт дозы":"Расчёт скорости"}</h2></div><div className="score">{result===null?"—":fmt(result)}<small>{reverse?selected[0]:"мл/ч"}</small></div></div>
@@ -51,12 +52,13 @@ export default function InfusionTool({onBack}:{onBack:()=>void}){
  <p className="disclaimer">{infusionMeta.instruction}</p><div className="gcsgrid">
  <label><span>Препарат</span><select value={drug} onChange={e=>{setDrug(e.target.value);setUnit(e.target.value==="vasopressin"?"ЕД/мин":"мкг/кг/мин");setMg("");setDose("");setCopied(false);setError(false);}}>{drugs.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>
  {drug==="other"&&<label><span>Название препарата</span><input value={other} onChange={e=>update(setOther)(e.target.value)}/></label>}
- {selected[2]&&<Field label="Масса тела" value={weight} onChange={update(setWeight)} unit="кг"/>}
- <Field label="Количество препарата в готовом растворе" value={mg} onChange={update(setMg)} unit={amountUnit}/>
- <Field label="Конечный объём раствора" value={volume} onChange={update(setVolume)} unit="мл"/>
- {reverse?<><Field label="Скорость дозатора" value={dose} onChange={update(setDose)} unit="мл/ч"/><label><span>Единицы результата</span><select value={selected[0]} onChange={e=>update(setUnit)(e.target.value)}>{available.map(x=><option key={x[0]}>{x[0]}</option>)}</select></label></>:<Field label="Назначенная доза" value={dose} onChange={update(setDose)} unit={selected[0]} choices={available.map(x=>x[0])} onUnit={u=>{setUnit(u);setDose("");setCopied(false);setError(false);}}/>}</div>
+ {selected[2]&&<Field label="Масса тела" issue={validateNumeric(weight,{required:true,min:Number.MIN_VALUE,warnMin:30,warnMax:250},attempted)} value={weight} onChange={update(setWeight)} unit="кг"/>}
+ <Field label="Количество препарата в готовом растворе" issue={validateNumeric(mg,{required:true,min:Number.MIN_VALUE},attempted)} value={mg} onChange={update(setMg)} unit={amountUnit}/>
+ <Field label="Конечный объём раствора" issue={validateNumeric(volume,{required:true,min:Number.MIN_VALUE},attempted)} value={volume} onChange={update(setVolume)} unit="мл"/>
+ {reverse?<><Field label="Скорость дозатора" issue={validateNumeric(dose,{required:true,min:0},attempted)} value={dose} onChange={update(setDose)} unit="мл/ч"/><label><span>Единицы результата</span><select value={selected[0]} onChange={e=>update(setUnit)(e.target.value)}>{available.map(x=><option key={x[0]}>{x[0]}</option>)}</select></label></>:<Field label="Назначенная доза" value={dose} onChange={update(setDose)} unit={selected[0]} choices={available.map(x=>x[0])} onUnit={u=>{setUnit(u);setDose("");setCopied(false);setError(false);}}/>}</div>
  {result!==null&&<><div className="result"><span>Результат</span><strong>{fmt(result)} {reverse?selected[0]:"мл/ч"} · {fmt(concentration)} {concUnit}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
  {result===null&&<p className="muted">Заполните необходимые поля: масса, количество и объём должны быть положительными, доза или скорость — неотрицательной.</p>}
+ <button type="button" className="copy-button" onClick={()=>setAttempted(true)}>Проверить ввод и рассчитать</button>
  <button type="button" className="back" onClick={reset}>Сбросить поля</button>
  {error&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
  <p className="disclaimer">{infusionMeta.disclaimer}</p><p className="disclaimer">Формула: {infusionMeta.sourceLabel}.</p></section></>;
