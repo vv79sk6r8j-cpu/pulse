@@ -37,7 +37,7 @@ export default function InfusionTool({onBack}:{onBack:()=>void}){
  const w=numeric(weight),m=numeric(mg),v=numeric(volume),d=numeric(dose);
  const factor=selected[1]*(selected[2]?w:1);
  const concentration=m*(activity?1:1000)/v;
- const valid=[m,v,d,factor,concentration].every(Number.isFinite)&&m>0&&v>0&&d>=0&&factor>0&&concentration>0&&(!selected[2]||w>0);
+ const valid=[m,v,d,factor,concentration].every(Number.isFinite)&&[["mg",mg],["volume",volume],["dose",dose]].every(([key,raw])=>validateNumeric(raw,infusionMeta.validation[key as keyof typeof infusionMeta.validation],true)?.kind!=="error")&&factor>0&&concentration>0&&(!selected[2]||validateNumeric(weight,infusionMeta.validation.weight,true)?.kind!=="error");
  const computed=valid?convertInfusion(d,concentration,factor,reverse):NaN;
  const result=Number.isFinite(computed)?computed:null;
  const fmt=(n:number)=>n===0?"0":Number(n.toPrecision(6)).toString();
