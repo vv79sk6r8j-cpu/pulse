@@ -1,7 +1,7 @@
 import {useState} from "react";
 import {ArrowLeft} from "lucide-react";
 import {UnitFieldFrame,UnitSuffix,numericInputStyle,unitSelectStyle,parseDecimal,validateNumeric,FieldFeedback} from "../components/NumericInputWithUnit";
-export const kdigoMeta={validation:{c:{min:Number.MIN_VALUE,warnMin:8.8,warnMax:999},b48:{min:Number.MIN_VALUE,warnMin:8.8,warnMax:999},b7:{min:Number.MIN_VALUE,warnMin:8.8,warnMax:999},w:{min:Number.MIN_VALUE},vol:{min:0},h:{min:Number.MIN_VALUE}},validationSource:"SOFA-2 JAMA 2025 supplementary eTable 2 (joi250090supp2); research plausibility ranges, provisional nonblocking warnings",catalogDescription:"ОПП: динамика креатинина, диурез, ЗПТ (KDIGO 2012)"};
+export const kdigoMeta={anthropometryValidationSource:"Soh et al., doi:10.1136/jech-2025-225333; provisional research anthropometry bounds, not ICU-specific; pending source and clinical review",validation:{c:{min:Number.MIN_VALUE,warnMin:8.8,warnMax:999},b48:{min:Number.MIN_VALUE,warnMin:8.8,warnMax:999},b7:{min:Number.MIN_VALUE,warnMin:8.8,warnMax:999},w:{min:Number.MIN_VALUE,warnMin:24.9,warnMax:453.6},vol:{min:0},h:{min:Number.MIN_VALUE}},validationSource:"SOFA-2 JAMA 2025 supplementary eTable 2 (joi250090supp2); research plausibility ranges, provisional nonblocking warnings",catalogDescription:"ОПП: динамика креатинина, диурез, ЗПТ (KDIGO 2012)"};
 export function stageAKI(c:number,b48:number,b7:number,rate:number,h:number,rrt:boolean){
  const ratios=[b48,b7].filter(b=>Number.isFinite(b)&&b>0).map(b=>c/b);
  const ratio=ratios.length?Math.max(...ratios):NaN;
