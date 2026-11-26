@@ -9,9 +9,9 @@ export const sofaMeta={
  subtitle:"Sequential Organ Failure Assessment · оригинальная SOFA",
  shortTitle:"SOFA",
  cardTitle:"Шесть органных систем",
- instruction:"Укажите показатели за выбранный период оценки. Для респираторного компонента используйте PaO₂/FiO₂ (мм рт. ст.) и отметьте респираторную поддержку. Для вазопрессоров учитывается максимальный уровень поддержки; дозы в мкг/кг/мин, препараты введены не менее часа. Для билирубина и креатинина применяются опубликованные пороги выбранных единиц; пограничные результаты могут различаться из-за округления исходных таблиц. Для непрерывных диапазонов в мг/дл приняты границы ≥12 и ≥5 соответственно.",
+ instruction:"Для суточной оценки используйте наихудший балл каждой органной системы за один и тот же 24-часовой период. Не смешивайте показатели разных периодов. Для респираторного компонента используйте PaO₂/FiO₂ (мм рт. ст.) и отметьте респираторную поддержку. Для вазопрессоров учитывается максимальный уровень поддержки; дозы в мкг/кг/мин, препараты введены не менее часа. Для билирубина и креатинина применяются опубликованные пороги выбранных единиц; пограничные результаты могут различаться из-за округления исходных таблиц. Для непрерывных диапазонов в мг/дл приняты границы ≥12 и ≥5 соответственно.",
  catalogDescription:"Шесть органных систем, суммарная оценка 0–24 балла",
- disclaimer:"SOFA — динамическая шкала органной дисфункции, не самостоятельный диагноз сепсиса. При отсутствии данных нельзя автоматически считать компонент нормальным. Для исходной SOFA учитывайте клинический контекст, поддержку органов и время измерений. Используется оригинальная версия SOFA, не SOFA-2.",
+ disclaimer:"SOFA — динамическая шкала органной дисфункции, не самостоятельный диагноз сепсиса. При отсутствии данных нельзя автоматически считать компонент нормальным. При седации или миорелаксации не подставляйте автоматически GCS 3; используйте достоверную оценку сознания согласно принятому протоколу либо отметьте невозможность расчёта. При ЗПТ интерпретируйте почечный компонент с учётом времени измерения и локального протокола; автоматическое начисление баллов за ЗПТ не предусмотрено. Используется оригинальная версия SOFA, не SOFA-2.",
  sourceLabel:"Vincent JL et al. The SOFA score to describe organ dysfunction/failure. Intensive Care Med. 1996.",
  sourceUrl:"https://pubmed.ncbi.nlm.nih.gov/8844239/"
 } as const;
@@ -30,7 +30,7 @@ const inputs=[
 const numeric=(v:string)=>v.trim()===""?null:parseDecimal(v);
 export function calculateSofa(v:Values,units:Values={}):number[]|null{
  const pf=numeric(v.pf??""),pl=numeric(v.platelets??""),bil=numeric(v.bilirubin??""),map=numeric(v.map??""),gcs=numeric(v.gcs??""),cr=numeric(v.creatinine??""),ur=numeric(v.urine??"");
- if(Object.entries(sofaMeta.validation).some(([id,rule])=>validateNumeric(v[id]??'',rule,true)?.kind==='error')||!v.respSupport||!v.pressor)return null;
+ if(Object.entries(sofaMeta.validation).some(([id,rule])=>validateNumeric(v[id]??'',rule,true)?.kind==='error')||!inputs.find(f=>f.id==='respSupport')?.options?.some(o=>o[0]===v.respSupport)||!inputs.find(f=>f.id==='pressor')?.options?.some(o=>o[0]===v.pressor))return null;
  const respiratory=pf!<100&&v.respSupport==="yes"?4:pf!<200&&v.respSupport==="yes"?3:pf!<300?2:pf!<400?1:0;
  const coag=pl!<20?4:pl!<50?3:pl!<100?2:pl!<150?1:0;
  const liver=units.bilirubin==='alt'?(bil!>=12?4:bil!>=6?3:bil!>=2?2:bil!>=1.2?1:0):(bil!>204?4:bil!>=102?3:bil!>=33?2:bil!>=20?1:0);
