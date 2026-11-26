@@ -56,7 +56,7 @@ export default function FourTool({onBack}:{onBack:()=>void}){
  <p className="disclaimer">{fourMeta.instruction}</p>
  {domains.map(d=><div key={d.id} className="scale-domain"><h3>{d.title}</h3><div className="scale-options">{d.options.map(([score,label])=><button key={score} className={"scale-option "+(scores[d.id]===score?"active":"")} aria-pressed={scores[d.id]===score} onClick={()=>{setScores(prev=>({...prev,[d.id]:score}));setCopied(false);}}><strong>{score}</strong><span><b>{label}</b></span></button>)}</div></div>)}
  {result&&<><div className="result"><span>Результат</span><strong>{result}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
- {error&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
+ <button className="back" onClick={()=>{setScores({});setCopied(false);setError(false);}}>Сбросить поля</button>{error&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
  <p className="disclaimer">{fourMeta.disclaimer}</p><p className="disclaimer">Источник: <a href={fourMeta.sourceUrl} target="_blank" rel="noopener noreferrer">{fourMeta.sourceLabel}</a>.</p>
  </section></>;
 }
