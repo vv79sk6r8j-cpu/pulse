@@ -1,10 +1,19 @@
 import type { ReactNode } from "react";
 export function parseDecimal(value:string):number {
  const s=value.trim();
- return /^\d+(?:[.,]\d+)?$/.test(s)?Number(s.replace(",",".")):NaN;
+ const n=/^\d+(?:[.,]\d+)?$/.test(s)?Number(s.replace(",",".")):NaN;
+ return Number.isFinite(n)?n:NaN;
 }
-export function UnitFieldFrame({children}:{children:ReactNode}){
- return <div style={{display:"flex",alignItems:"center",border:"1px solid currentColor",borderRadius:8,overflow:"hidden",minWidth:0}}>{children}</div>;
+export type FieldIssue={kind:"error"|"warning";message:string};
+export function validateNumeric(value:string,{required=false,allowZero=false,warningMin,warningMax,factor=1}:{required?:boolean;allowZero?:boolean;warningMin?:number;warningMax?:number;factor?:number}={}):FieldIssue|undefined {
+ if(!value.trim())return required?{kind:"error",message:"Заполните поле."}:undefined;
+ const n=parseDecimal(value);
+ if(!Number.isFinite(n)||n<0||(!allowZero&&n===0))return {kind:"error",message:"Введите допустимое числовое значение."};
+ const normalized=n*factor;
+ if((warningMin!==undefined&&normalized<warningMin)||(warningMax!==undefined&&normalized>warningMax))return {kind:"warning",message:"Нетипичное значение. Проверьте ввод и единицы измерения."};
+}
+export function UnitFieldFrame({children,issue}:{children:ReactNode;issue?:FieldIssue}){
+ return <><div style={{display:"flex",alignItems:"center",border:"1px solid "+(issue?.kind==="error"?"#dc2626":issue?.kind==="warning"?"#d97706":"currentColor"),borderRadius:8,overflow:"hidden",minWidth:0}}>{children}</div>{issue&&<small role={issue.kind==="error"?"alert":"status"} style={{color:issue.kind==="error"?"#dc2626":"#b45309"}}>{issue.message}</small>}</>;
 }
 export const numericInputStyle={flex:"1 1 0",minWidth:0,width:0,border:0,borderRadius:0} as const;
 export const unitSelectStyle={width:"auto",maxWidth:"55%",border:0,borderLeft:"1px solid currentColor",borderRadius:0} as const;
