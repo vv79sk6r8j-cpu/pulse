@@ -1,3 +1,4 @@
+import { UnitFieldFrame, UnitSuffix, numericInputStyle, unitSelectStyle, parseDecimal } from "../components/NumericInputWithUnit";
 import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
@@ -23,9 +24,9 @@ export function infusionRate(doseMcgKgMin:number,weightKg:number,drugMg:number,v
 export function convertInfusion(value:number,concentration:number,factor:number,reverse:boolean):number{
  return reverse?value*concentration/factor:value*factor/concentration;
 }
-function numeric(s:string){return s.trim()!==""&&/^\d+(?:[.,]\d+)?$/.test(s.trim())?Number(s.replace(",",".")):NaN;}
+const numeric=parseDecimal;
 function Field({label,value,onChange,unit,choices,onUnit}:{label:string,value:string,onChange:(v:string)=>void,unit:string,choices?:readonly string[],onUnit?:(v:string)=>void}){
- return <label><span>{label}</span><div style={{display:"flex",alignItems:"stretch",border:"1px solid currentColor",borderRadius:8,overflow:"hidden",minWidth:0}}><input aria-label={label} inputMode="decimal" value={value} onChange={e=>onChange(e.target.value)} style={{flex:"1 1 0",minWidth:0,border:0,borderRadius:0,width:"0"}}/>{choices?<select aria-label={label+" — единицы"} value={unit} onChange={e=>onUnit?.(e.target.value)} style={{width:"auto",maxWidth:"55%",border:0,borderLeft:"1px solid currentColor",borderRadius:0}}>{choices.map(u=><option key={u}>{u}</option>)}</select>:<span style={{alignSelf:"center",padding:"0 10px",whiteSpace:"nowrap"}}>{unit}</span>}</div></label>;
+ return <label><span>{label}</span><UnitFieldFrame><input aria-label={label} inputMode="decimal" value={value} onChange={e=>onChange(e.target.value)} style={numericInputStyle}/>{choices?<select aria-label={label+" — единицы"} value={unit} onChange={e=>onUnit?.(e.target.value)} style={unitSelectStyle}>{choices.map(u=><option key={u}>{u}</option>)}</select>:<UnitSuffix>{unit}</UnitSuffix>}</UnitFieldFrame></label>;
 }
 export default function InfusionTool({onBack}:{onBack:()=>void}){
  const [drug,setDrug]=useState("norepi"),[weight,setWeight]=useState(""),[mg,setMg]=useState(""),[volume,setVolume]=useState(""),[dose,setDose]=useState(""),[copied,setCopied]=useState(false),[error,setError]=useState(false),[reverse,setReverse]=useState(false),[unit,setUnit]=useState("мкг/кг/мин"),[other,setOther]=useState("");
