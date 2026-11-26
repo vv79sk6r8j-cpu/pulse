@@ -1,3 +1,4 @@
+import { UnitFieldFrame, UnitSuffix, numericInputStyle, parseDecimal } from "../components/NumericInputWithUnit";
 import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
@@ -19,13 +20,13 @@ export function devineIBW(heightCm:number,sex:"male"|"female"):number{
 }
 export default function IbwTool({onBack}:{onBack:()=>void}){
  const [height,setHeight]=useState(""),[sex,setSex]=useState<"male"|"female"| "">(""),[copied,setCopied]=useState(false),[error,setError]=useState(false);
- const h=Number(height.replace(",",".")),valid=height.trim()!==""&&Number.isFinite(h)&&h>=152.4&&h<=230&&sex!=="";
+ const h=parseDecimal(height),valid=height.trim()!==""&&Number.isFinite(h)&&h>=152.4&&h<=230&&sex!=="";
  const result=valid?devineIBW(h,sex as "male"|"female"):null;
  const note=result===null?"":`Идеальная масса тела (Devine): ${result.toFixed(1)} кг; рост ${h} см; пол по формуле: ${sex==="male"?"мужской":"женский"}.`;
  const copy=async()=>{try{await navigator.clipboard.writeText(note);setCopied(true);setError(false);}catch{setError(true);}};
  return <><button className="back" onClick={onBack}><ArrowLeft size={17}/> Все инструменты</button><div className="page-heading"><span className="overline">{ibwMeta.category}</span><h1>{ibwMeta.title}</h1><p className="muted">{ibwMeta.subtitle}</p></div>
  <section className="calculator"><div className="calchead"><div><span className="overline">{ibwMeta.shortTitle}</span><h2>{ibwMeta.cardTitle}</h2></div><div className="score">{result===null?"—":result.toFixed(1)}<small>кг</small></div></div>
- <p className="disclaimer">{ibwMeta.instruction}</p><div className="gcsgrid"><label><span>Рост</span><div style={{display:"flex",alignItems:"center",border:"1px solid currentColor",borderRadius:8,overflow:"hidden",minWidth:0}}><input style={{flex:1,minWidth:0,width:0,border:0,borderRadius:0}} type="text" min="152.4" max="230" step="0.1" inputMode="decimal" value={height} onChange={e=>{setHeight(e.target.value);setCopied(false);}} placeholder="Например, 175"/><span style={{padding:"0 10px",whiteSpace:"nowrap"}}>см</span></div></label><label><span>Пол в формуле</span><select value={sex} onChange={e=>{setSex(e.target.value as typeof sex);setCopied(false);}}><option value="">Выберите</option><option value="male">Мужской</option><option value="female">Женский</option></select></label></div>
+ <p className="disclaimer">{ibwMeta.instruction}</p><div className="gcsgrid"><label><span>Рост</span><UnitFieldFrame><input style={numericInputStyle} type="text" min="152.4" max="230" step="0.1" inputMode="decimal" value={height} onChange={e=>{setHeight(e.target.value);setCopied(false);}} placeholder="Например, 175"/><UnitSuffix>см</UnitSuffix></UnitFieldFrame></label><label><span>Пол в формуле</span><select value={sex} onChange={e=>{setSex(e.target.value as typeof sex);setCopied(false);}}><option value="">Выберите</option><option value="male">Мужской</option><option value="female">Женский</option></select></label></div>
  {height!==""&&(!Number.isFinite(h)||h<152.4||h>230)&&<p role="alert" className="copy-error">Для этой реализации допустим рост 152,4–230 см.</p>}
  {note&&<><div className="result"><span>Результат</span><strong>{note}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
  <button type="button" className="back" onClick={()=>{setHeight("");setSex("");setCopied(false);setError(false);}}>Сбросить поля</button>
