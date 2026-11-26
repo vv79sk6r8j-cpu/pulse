@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
 export const renalMeta={
+ validation:{age:{required:true,min:18},creatinine:{required:true,min:Number.MIN_VALUE},weight:{min:Number.MIN_VALUE}},
  category:"КЛИНИЧЕСКИЙ КАЛЬКУЛЯТОР",
  title:"Оценка функции почек",
  subtitle:"CKD-EPI 2021 · Cockcroft–Gault",
@@ -25,10 +26,10 @@ export default function RenalTool({onBack}:{onBack:()=>void}){
  const [age,setAge]=useState(""),[creatinine,setCreatinine]=useState(""),[unit,setUnit]=useState<"umol"|"mgdl">("umol"),[weight,setWeight]=useState(""),[sex,setSex]=useState<"male"|"female"|"">(""),[copied,setCopied]=useState(false),[error,setError]=useState(false);
  const [attempted,setAttempted]=useState(false);
  const a=parseDecimal(age),c=parseDecimal(creatinine),w=parseDecimal(weight),scr=unit==="umol"?c/88.4:c;
- const base=age!==""&&creatinine!==""&&sex!==""&&Number.isFinite(a)&&Number.isInteger(a)&&a>=18&&Number.isFinite(scr)&&scr>0;
- const ageIssue=validateNumeric(age,{required:true,min:18},attempted)??(attempted&&age.trim()&&!Number.isInteger(a)?{kind:"error" as const,message:"Введите возраст в полных годах."}:undefined);
- const creatIssue=validateNumeric(creatinine,{required:true,min:Number.MIN_VALUE},attempted);
- const weightIssue=validateNumeric(weight,{min:Number.MIN_VALUE},attempted);
+ const base=age!==""&&creatinine!==""&&sex!==""&&Number.isFinite(a)&&Number.isInteger(a)&&a>=renalMeta.validation.age.min&&Number.isFinite(scr)&&scr>0;
+ const ageIssue=validateNumeric(age,renalMeta.validation.age,attempted)??(attempted&&age.trim()&&!Number.isInteger(a)?{kind:"error" as const,message:"Введите возраст в полных годах."}:undefined);
+ const creatIssue=validateNumeric(creatinine,renalMeta.validation.creatinine,attempted);
+ const weightIssue=validateNumeric(weight,renalMeta.validation.weight,attempted);
  const validWeight=weight!==""&&Number.isFinite(w)&&w>0;
  const egfr=base?egfr2021(a,scr,sex as "male"|"female"):null;
  const crcl=base&&validWeight&&a<140?cockcroftGault(a,scr,w,sex as "male"|"female"):null;
