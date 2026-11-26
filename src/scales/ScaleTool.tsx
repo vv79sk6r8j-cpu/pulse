@@ -19,9 +19,9 @@ export default function EarlyScaleTool({kind,onBack}:{kind:EarlyScale,onBack:()=
   const meta=isRass?rassMeta:qsofaMeta;
   const rr=resp.trim()===""?null:parseDecimal(resp);
   const bp=sbp.trim()===""?null:parseDecimal(sbp);
-  const validRR=!validateNumeric(resp,qsofaMeta.validation.resp,true)&&Number.isInteger(rr);
-  const validBP=!validateNumeric(sbp,qsofaMeta.validation.sbp,true)&&Number.isInteger(bp);
-  const issue=(raw:string,key:'resp'|'sbp'):FieldIssue|undefined=>validateNumeric(raw,qsofaMeta.validation[key],attempted)??(attempted&&raw.trim()&&!Number.isInteger(parseDecimal(raw))?{kind:"error",message:"Введите целое число."}:undefined);
+  const validRR=validateNumeric(resp,qsofaMeta.validation.resp,true)?.kind!=="error";
+  const validBP=validateNumeric(sbp,qsofaMeta.validation.sbp,true)?.kind!=="error";
+  const issue=(raw:string,key:'resp'|'sbp'):FieldIssue|undefined=>validateNumeric(raw,qsofaMeta.validation[key],attempted);
   const missing:FieldIssue|undefined=attempted?{kind:"error",message:"Выберите вариант."}:undefined;
   const complete=validRR&&validBP&&mental!==null;
   const total=complete?calculateQsofa(rr!,bp!,mental==="altered"):null;
