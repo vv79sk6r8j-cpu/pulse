@@ -18,3 +18,17 @@ test("Devine baseline and one inch above",()=>{near(devineIBW(152.4,"male"),50);
 test("Infusion norepinephrine 4 mg in 50 mL, 80 kg, 0.1 mcg/kg/min",()=>{near(infusionRate(0.1,80,4,50),6);near(convertInfusion(0.1,80,4800,false),6);near(convertInfusion(6,80,4800,true),0.1);});
 test("Vasopressin 20 units in 50 mL, 0.03 units/min",()=>{near(convertInfusion(0.03,0.4,60,false),4.5);near(convertInfusion(4.5,0.4,60,true),0.03);});
 test("Zero dose and reverse rate",()=>{near(convertInfusion(0,80,4800,false),0);near(convertInfusion(0,80,4800,true),0);});
+
+test("All six mass dose units in both directions",()=>{
+ // 4 mg / 50 mL, 80 kg; equivalent doses all deliver 6 mL/h.
+ for(const [dose,factor] of [[0.1,4800],[6,80],[0.006,80000],[8,60],[480,1],[0.48,1000]]){
+  near(convertInfusion(dose,80,factor,false),6,1e-9);
+  near(convertInfusion(6,80,factor,true),dose,1e-9);
+ }
+});
+test("Both activity dose units in both directions",()=>{
+ for(const [dose,factor] of [[0.03,60],[1.8,1]]){
+  near(convertInfusion(dose,0.4,factor,false),4.5,1e-9);
+  near(convertInfusion(4.5,0.4,factor,true),dose,1e-9);
+ }
+});
