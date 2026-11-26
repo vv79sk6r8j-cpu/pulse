@@ -3,7 +3,8 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
 export const sofaMeta={
- validation:{pf:{required:true,min:Number.MIN_VALUE},platelets:{required:true,min:0},bilirubin:{required:true,min:0},map:{required:true,min:0},gcs:{required:true,min:3,max:15,integer:true},creatinine:{required:true,min:Number.MIN_VALUE},urine:{required:true,min:0}},
+ validation:{pf:{required:true,min:Number.MIN_VALUE},platelets:{required:true,min:0,warnMin:1,warnMax:999},bilirubin:{required:true,min:0,warnMin:1.7,warnMax:800},map:{required:true,min:0,warnMin:15,warnMax:199},gcs:{required:true,min:3,max:15,integer:true},creatinine:{required:true,min:Number.MIN_VALUE,warnMin:8.8,warnMax:999},urine:{required:true,min:0}},
+ validationSource:"SOFA-2 JAMA 2025 supplementary eTable 2 (joi250090supp2); research plausibility ranges, provisional nonblocking warnings",
  category:"КЛИНИЧЕСКАЯ ШКАЛА",
  title:"SOFA — оценка органной дисфункции",
  subtitle:"Sequential Organ Failure Assessment · оригинальная SOFA",
@@ -43,7 +44,7 @@ export function calculateSofa(v:Values,units:Values={}):number[]|null{
 export default function SofaTool({onBack}:{onBack:()=>void}){
  const [values,setValues]=useState<Values>({}),[copied,setCopied]=useState(false),[error,setError]=useState(false);
  const [attempted,setAttempted]=useState(false);
- const issueFor=(id:string,type:string):FieldIssue|undefined=>{const raw=values[id]??'';if(type==='select')return attempted&&!raw?{kind:'error',message:'Выберите значение.'}:undefined;const issue=validateNumeric(raw,sofaMeta.validation[id as keyof typeof sofaMeta.validation],attempted);return issue;};
+ const issueFor=(id:string,type:string):FieldIssue|undefined=>{const raw=values[id]??'';if(type==='select')return attempted&&!raw?{kind:'error',message:'Выберите значение.'}:undefined;const issue=validateNumeric(raw,{...sofaMeta.validation[id as keyof typeof sofaMeta.validation],factor:units[id]==='alt'?(id==='map'||id==='pf'?7.50062:id==='bilirubin'?17.1:88.4):1},attempted);return issue;};
  const [units,setUnits]=useState<Values>({});
  const normalized={...values};
  for(const [id,factor] of Object.entries({pf:7.50062,map:7.50062})){if(units[id]==="alt"&&values[id]?.trim())normalized[id]=String(parseDecimal(values[id])*factor);}
