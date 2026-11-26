@@ -3,13 +3,13 @@ import { useState } from "react";
 import { ArrowLeft, Check, Copy } from "lucide-react";
 
 export const fourMeta={
- validation:{components:{required:true}},
+ validation:{components:{required:true,allowNotTestable:true}},
  category:"КЛИНИЧЕСКАЯ ШКАЛА",
  title:"FOUR — оценка уровня сознания",
  subtitle:"Full Outline of UnResponsiveness",
  shortTitle:"FOUR",
  cardTitle:"Оцените четыре компонента",
- instruction:"Для каждого компонента выберите один вариант, соответствующий наблюдаемому ответу. Отмечайте ограничения исследования отдельно.",
+ instruction:"Для каждого компонента выберите один вариант, соответствующий наблюдаемому ответу. Если компонент невозможно оценить, выберите NT; общая сумма в таком случае не рассчитывается. NT — отметка приложения, а не балл оригинальной шкалы.",
  catalogDescription:"Глаза, двигательная реакция, стволовые рефлексы и дыхание; 0–16 баллов",
  disclaimer:"FOUR не заменяет неврологическое обследование или формальную диагностику смерти мозга. Стволовые рефлексы и дыхательный паттерн оцениваются с учётом седации, интубации и иных клинических ограничений.",
  sourceLabel:"Wijdicks et al. Validation of a new coma scale: The FOUR score. Ann Neurol. 2005.",
@@ -46,18 +46,18 @@ const domains=[
   [0,"Интубирован, дыхание в ритме аппарата ИВЛ или апноэ"]
  ]}
 ] as const;
-export function calculateFour(scores:Record<string,number>){return domains.every(d=>d.options.some(([score])=>score===scores[d.id]))?domains.reduce((n,d)=>n+scores[d.id],0):null;}
+export function calculateFour(scores:Record<string,number|"NT">){return domains.every(d=>d.options.some(([score])=>score===scores[d.id]))?domains.reduce((n,d)=>n+Number(scores[d.id]),0):null;}
 export default function FourTool({onBack}:{onBack:()=>void}){
  const [attempted,setAttempted]=useState(false);
- const [scores,setScores]=useState<Record<string,number>>({}),[copied,setCopied]=useState(false),[error,setError]=useState(false);
+ const [scores,setScores]=useState<Record<string,number|"NT">>({}),[copied,setCopied]=useState(false),[error,setError]=useState(false);
  const total=calculateFour(scores);
- const result=total===null?"":`FOUR: E${scores.E} M${scores.M} B${scores.B} R${scores.R} = ${total}/16 баллов.`;
+ const result=domains.every(d=>scores[d.id]!==undefined)?`FOUR: E${scores.E} M${scores.M} B${scores.B} R${scores.R}${total===null?"; сумма не определяется.":` = ${total}/16 баллов.`}`:"";
  const copy=async()=>{try{await navigator.clipboard.writeText(result);setCopied(true);setError(false);}catch{setError(true);}};
  return <><button className="back" onClick={onBack}><ArrowLeft size={17}/> Все шкалы</button>
  <div className="page-heading"><span className="overline">{fourMeta.category}</span><h1>{fourMeta.title}</h1><p className="muted">{fourMeta.subtitle}</p></div>
  <section className="calculator"><div className="calchead"><div><span className="overline">{fourMeta.shortTitle}</span><h2>{fourMeta.cardTitle}</h2></div><div className="score">{total??"—"}<small>/16</small></div></div>
  <p className="disclaimer">{fourMeta.instruction}</p>
- {domains.map(d=><div key={d.id} className="scale-domain"><h3>{d.title}</h3><div className="scale-options" style={attempted&&fourMeta.validation.components.required&&scores[d.id]===undefined?{outline:"1px solid #dc2626",borderRadius:8}:undefined}>{d.options.map(([score,label])=><button key={score} className={"scale-option "+(scores[d.id]===score?"active":"")} aria-pressed={scores[d.id]===score} onClick={()=>{setScores(prev=>({...prev,[d.id]:score}));setCopied(false);}}><strong>{score}</strong><span><b>{label}</b></span></button>)}</div><FieldFeedback issue={attempted&&fourMeta.validation.components.required&&scores[d.id]===undefined?{kind:"error",message:"Выберите ответ."}:undefined}/></div>)}
+ {domains.map(d=><div key={d.id} className="scale-domain"><h3>{d.title}</h3><div className="scale-options" style={attempted&&fourMeta.validation.components.required&&scores[d.id]===undefined?{outline:"1px solid #dc2626",borderRadius:8}:undefined}>{d.options.map(([score,label])=><button key={score} className={"scale-option "+(scores[d.id]===score?"active":"")} aria-pressed={scores[d.id]===score} onClick={()=>{setScores(prev=>({...prev,[d.id]:score}));setCopied(false);}}><strong>{score}</strong><span><b>{label}</b></span></button>)}{fourMeta.validation.components.allowNotTestable&&<button type="button" className={"scale-option "+(scores[d.id]==="NT"?"active":"")} aria-pressed={scores[d.id]==="NT"} onClick={()=>{setScores(prev=>({...prev,[d.id]:"NT"}));setCopied(false);setError(false);}}><strong>NT</strong><span>Не оценивается</span></button>}</div><FieldFeedback issue={attempted&&fourMeta.validation.components.required&&scores[d.id]===undefined?{kind:"error",message:"Выберите ответ."}:undefined}/></div>)}
  {result&&<><div className="result"><span>Результат</span><strong>{result}</strong></div><button className="copy-button" onClick={copy}>{copied?<Check size={18}/>:<Copy size={18}/>} {copied?"Скопировано":"Копировать результат"}</button></>}
  <button className="copy-button" onClick={()=>setAttempted(true)}>Проверить ввод и рассчитать</button>
  <button className="back" onClick={()=>{setAttempted(false);setScores({});setCopied(false);setError(false);}}>Сбросить поля</button>{error&&<p role="alert" className="copy-error">Не удалось скопировать результат.</p>}
