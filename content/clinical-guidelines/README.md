@@ -4,6 +4,6 @@
 
 - [Сепсис и септический шок у взрослых — DRAFT](sepsis-adults-DRAFT.md)
 - [Остановка кровообращения у взрослых — DRAFT](cardiac-arrest-adults-DRAFT.md)
-- [Стандарт клинического контента — DRAFT](clinical-content-standard-DRAFT.md)
+Стандарт клинического контента хранится отдельно: `standards/clinical-content-standard-DRAFT.md` в ветке `feature/v0.4-scales-calculators`. 
 
 Эти файлы содержат структуру будущих материалов, логику переходов и задания на иллюстрации. HTML-прототипы пока не разрабатываются.
