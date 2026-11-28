@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 # Publish stable main and PULSE 0.4 test branch together.
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 concurrency:
@@ -25,18 +25,6 @@ jobs:
         with:
           ref: feature/v0.4-scales-calculators
           path: preview-source
-      - name: Generate PDF originals in preview source
-        working-directory: preview-source
-        run: |
-          python -m pip install --quiet reportlab
-          python scripts/build-document-pdfs.py
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/documents/*.pdf
-          if ! git diff --cached --quiet; then
-            git commit -m "docs: store generated downloadable PDF originals"
-            git push origin HEAD:feature/v0.4-scales-calculators
-          fi
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -56,8 +44,6 @@ jobs:
           npm install --no-save sharp
           PULSE_PREVIEW=1 node ../stable/scripts/generate-icons.mjs
           npm run build
-          mkdir -p dist/documents
-          cp src/documents/*.pdf dist/documents/
       - name: Combine stable and preview
         run: |
           mkdir -p stable/dist/preview
