@@ -19,15 +19,20 @@ type Page = Section | "GCS" | "RASS" | "qSOFA" | "ASA" | "FOUR" | "SOFA" | "IBW"
 function PocusIcon({size=24}:{size?:number|string}){return <svg width={size} height={size} viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 25Q32 17 43 25L42 33Q41 38 37 42L36 54Q32 59 28 54L27 42Q23 38 22 33Z"/><path d="M21.5 29Q32 22 42.5 29"/><path d="M32 44V49"/><path d="M32 56C32 65 15 61 15 52V46"/><path d="M18 18L11 7Q32 -2 53 7L46 18"/><path d="M24 11Q32 6 40 11"/><path d="M28 16Q32 13 36 16"/></svg>}
 
 const sections = [
- {title:"Теория" as Section,description:"Конспекты, клинические алгоритмы и рекомендации",icon:BookOpen},
- {title:"Шкалы и расчёты" as Section,description:"Оценка состояния и клинические калькуляторы",icon:Calculator},
- {title:"POCUS" as Section,description:"Протоколы ультразвукового обследования",icon:PocusIcon},
- {title:"Документы" as Section,description:"Дневники, консультации и шаблоны",icon:FileText},
- {title:"Справочники" as Section,description:"Краткие справочные материалы",icon:ClipboardList}
+ {title:"Теория" as Exclude<Section,"Главная">,description:"Конспекты, клинические алгоритмы и рекомендации",icon:BookOpen},
+ {title:"Шкалы и расчёты" as Exclude<Section,"Главная">,description:"Оценка состояния и клинические калькуляторы",icon:Calculator},
+ {title:"POCUS" as Exclude<Section,"Главная">,description:"Протоколы ультразвукового обследования",icon:PocusIcon},
+ {title:"Документы" as Exclude<Section,"Главная">,description:"Дневники, консультации и шаблоны",icon:FileText},
+ {title:"Справочники" as Exclude<Section,"Главная">,description:"Краткие справочные материалы",icon:ClipboardList}
 ];
 const navigation=[{title:"Главная" as Section,icon:House},...sections.map(s=>({title:s.title,icon:s.icon}))];
 
 function Mark({size=36}:{size?:number}){return <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect width="64" height="64" rx="18" fill="#17485A"/><path d="M5 33h10c3 0 3-6 7-6s4 6 8 6h3l3 5 5-24 6 37 5-18h7" stroke="#71DED1" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+
+function countLabel(count:number, forms:readonly [string,string,string]){
+ const lastTwo=count%100, last=count%10;
+ return `${count} ${forms[lastTwo>=11&&lastTwo<=14?2:last===1?0:last>=2&&last<=4?1:2]}`;
+}
 
 export default function App(){
  const [page,setPage]=useState<Page>("Главная");
@@ -43,6 +48,13 @@ export default function App(){
  const filteredArticles=articles.filter(a=>(a.title+" "+a.description+" "+a.keywords).toLocaleLowerCase("ru").includes(query.toLocaleLowerCase("ru")));
  const scales=[{title:"Шкала комы Глазго (GCS)",description:gcsMeta.catalogDescription,status:"Доступно",page:"GCS" as Page},{title:"RASS",description:rassMeta.catalogDescription,status:"Доступно",page:"RASS" as Page},{title:"qSOFA",description:qsofaMeta.catalogDescription,status:"Доступно",page:"qSOFA" as Page},{title:"ASA PS",description:asaMeta.catalogDescription,status:"Доступно",page:"ASA" as Page},{title:"FOUR",description:fourMeta.catalogDescription,status:"Доступно",page:"FOUR" as Page},{title:"SOFA",description:sofaMeta.catalogDescription,status:"Доступно",page:"SOFA" as Page},{title:"Идеальная масса тела (IBW)",description:ibwMeta.catalogDescription,status:"Доступно",page:"IBW" as Page},{title:"Функция почек",description:renalMeta.catalogDescription,status:"Доступно",page:"Renal" as Page},{title:"Скорость инфузии",description:infusionMeta.catalogDescription,status:"Доступно",page:"Infusion" as Page},{title:"Острое повреждение почек (KDIGO)",description:kdigoMeta.catalogDescription,status:"Доступно",page:"KDIGO" as Page}];
  const filteredScales=scales.filter(s=>(s.title+" "+s.description).toLocaleLowerCase("ru").includes(query.toLocaleLowerCase("ru")));
+ const catalogs:Record<Exclude<Section,"Главная">,{items:readonly unknown[];forms:readonly [string,string,string]}>={
+  "Теория":{items:articles,forms:["статья","статьи","статей"]},
+  "Шкалы и расчёты":{items:scales.filter(s=>s.status==="Доступно"),forms:["инструмент","инструмента","инструментов"]},
+  "Документы":{items:documentTemplates,forms:["шаблон","шаблона","шаблонов"]},
+  "POCUS":{items:[],forms:["протокол","протокола","протоколов"]},
+  "Справочники":{items:[],forms:["справочник","справочника","справочников"]}
+ };
  const go=(next:Page)=>{setPage(next);setMenuOpen(false);setQuery("");window.scrollTo({top:0,behavior:"smooth"});};
  const submitFeedback=async(e:React.FormEvent<HTMLFormElement>)=>{e.preventDefault();if(!feedbackTitle.trim()||!feedbackDescription.trim())return;const endpoint="https://pulse-feedback.s78cj9knjj.workers.dev";if(!endpoint){setFeedbackState("error");return;}setFeedbackState("sending");try{const response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:feedbackTitle.trim(),description:feedbackDescription.trim(),contact:feedbackContact.trim(),page:window.location.href})});if(!response.ok)throw Error("Feedback unavailable");setFeedbackState("success");setFeedbackTitle("");setFeedbackDescription("");setFeedbackContact("");}catch{setFeedbackState("error");}};
 
@@ -59,9 +71,9 @@ export default function App(){
    <main>
     {page==="Главная"&&<>
      <section className="hero"><div><div className="hero-kicker"><span className="status-dot"/> КЛИНИЧЕСКАЯ ПЛАТФОРМА</div><h1>PULSE — знания и инструменты под рукой</h1><p>Рабочее пространство для анестезиологии и интенсивной терапии.</p></div><div className="hero-visual"><Mark size={72}/><span>PULSE</span></div></section>
-     <div className="section-heading"><div><span className="overline">НАВИГАЦИЯ</span><h2>Разделы платформы</h2></div><span className="muted-label">5 направлений</span></div>
+     <div className="section-heading"><div><span className="overline">НАВИГАЦИЯ</span><h2>Разделы платформы</h2></div><span className="muted-label">{countLabel(sections.length,["направление","направления","направлений"])}</span></div>
      <label className="search"><Search size={19}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Поиск по разделам..." aria-label="Поиск по разделам"/>{query&&<button aria-label="Очистить поиск" onClick={()=>setQuery("")}><X size={17}/></button>}</label>
-     <div className="cards">{filtered.map(s=>{const ready=s.title==="Шкалы и расчёты"||s.title==="Теория"||s.title==="Документы";return <button key={s.title} className={"sectioncard "+(ready?"sectioncard-ready":"sectioncard-soon")} onClick={()=>go(s.title)}><div className="card-top"><span className="card-icon"><s.icon size={23}/></span><ArrowUpRight size={19}/></div><strong>{s.title}</strong><p>{s.description}</p><span className={"card-status "+(ready?"card-status-ready":"card-status-soon")}><span className="status-indicator"/>{ready?(s.title==="Теория"?"Доступно · 1 статья":s.title==="Документы"?`Доступно · ${documentTemplates.length} ${documentTemplates.length % 100 >= 11 && documentTemplates.length % 100 <= 14 ? "шаблонов" : documentTemplates.length % 10 === 1 ? "шаблон" : documentTemplates.length % 10 >= 2 && documentTemplates.length % 10 <= 4 ? "шаблона" : "шаблонов"}`:"Доступно · 10 инструментов"):"Скоро"}</span></button>})}</div>
+     <div className="cards">{filtered.map(s=>{const catalog=catalogs[s.title];const ready=catalog.items.length>0;return <button key={s.title} className={"sectioncard "+(ready?"sectioncard-ready":"sectioncard-soon")} onClick={()=>go(s.title)}><div className="card-top"><span className="card-icon"><s.icon size={23}/></span><ArrowUpRight size={19}/></div><strong>{s.title}</strong><p>{s.description}</p><span className={"card-status "+(ready?"card-status-ready":"card-status-soon")}><span className="status-indicator"/>{ready?`Доступно · ${countLabel(catalog.items.length,catalog.forms)}`:"Скоро"}</span></button>})}</div>
      {filtered.length===0&&<div className="empty">По запросу ничего не найдено.</div>}
     </>}
     {page==="Feedback"&&<><div className="page-heading"><span className="overline">ОБРАТНАЯ СВЯЗЬ</span><h1>Сообщить об ошибке</h1><p className="muted">Опишите неточность в расчёте, тексте или работе сайта. Не отправляйте персональные данные пациентов.</p></div><form className="feedback-form" onSubmit={submitFeedback}><label>Краткий заголовок<input required maxLength={120} value={feedbackTitle} onChange={e=>{setFeedbackTitle(e.target.value);setFeedbackState("idle")}} placeholder="Например: Ошибка в шкале GCS"/></label><label>Описание<textarea required rows={6} maxLength={4000} value={feedbackDescription} onChange={e=>{setFeedbackDescription(e.target.value);setFeedbackState("idle")}} placeholder="Что произошло и как воспроизвести ошибку?"/></label><label>Контакты (необязательно)<input maxLength={200} value={feedbackContact} onChange={e=>{setFeedbackContact(e.target.value);setFeedbackState("idle")}} placeholder="Telegram или email"/></label><p className="disclaimer">Заголовок и описание могут быть опубликованы в открытом репозитории PULSE. Контакты передаются только для уведомления владельца через Telegram и не сохраняются в GitHub. Не указывайте персональные или медицинские данные третьих лиц.</p><button className="copy-button" disabled={feedbackState==="sending"} type="submit"><Send size={18}/>{feedbackState==="sending"?"Отправка…":"Отправить"}</button>{feedbackState==="success"&&<p role="status" className="feedback-success">Сообщение отправлено. Спасибо!</p>}{feedbackState==="error"&&<p role="alert" className="copy-error">Не удалось отправить сообщение. Форма пока не подключена к серверу или сервис временно недоступен. Попробуйте связаться через Telegram.</p>}</form></>}
