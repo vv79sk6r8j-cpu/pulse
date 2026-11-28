@@ -92,3 +92,5 @@ jobs:
 # Rebuild preview after fixing document page Section type error TS2322.
 
 # Refresh preview with accessible high-contrast PDF download button.
+
+# Refresh preview with dynamic document count.
